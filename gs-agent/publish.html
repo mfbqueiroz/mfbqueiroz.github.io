@@ -218,6 +218,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-hei
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;background:var(--s1);border:1px solid var(--ok);color:var(--ok);font-size:13px;font-weight:500;transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
 .toast.show{transform:translateY(0);opacity:1;}
 
+/* ── IMAGE GENERATOR ── */
+.btn-gen-images{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:1px solid var(--ac2);background:var(--ac1);color:var(--ac);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-gen-images:hover{background:var(--ac2);border-color:var(--ac);}
+.btn-gen-images:disabled{opacity:.5;cursor:not-allowed;}
+.btn-gen-images.loading{animation:pulse-btn 1.2s ease-in-out infinite;}
+@keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.5}}
+.img-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px;padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;}
+.img-gallery-item{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--ln);background:var(--bg);transition:transform .2s;}
+.img-gallery-item:hover{transform:translateY(-2px);}
+.img-gallery-item canvas,.img-gallery-item img{width:100%;height:auto;display:block;}
+.img-gallery-label{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--s1);border-top:1px solid var(--ln);font-size:11px;color:var(--t2);}
+.img-dl-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--ln2);background:var(--s3);color:var(--t2);font-size:10px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.img-dl-btn:hover{color:var(--t1);border-color:var(--t2);background:var(--s4);}
+.img-actions-bar{display:flex;align-items:center;gap:8px;padding:0 16px 16px;flex-wrap:wrap;}
+.btn-dl-all{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:1px solid var(--ok);background:var(--ok1);color:var(--ok);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-dl-all:hover{background:rgba(63,185,80,0.2);}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .header{padding:12px 16px;flex-wrap:wrap;}
@@ -335,6 +352,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-hei
 
 </div>
 
+<canvas id="gen-canvas" style="display:none"></canvas>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -777,6 +795,12 @@ ${esc(p.caption_feed || '')}</div>
           <div class="visual-box-text">${esc(p.visual_description || 'Sem descricao visual')}</div>
         </div>
       </div>
+
+      <div style="padding:0 16px 12px;display:flex;align-items:center;gap:8px;">
+        <button class="btn-gen-images" id="btn-gen-img-${idx}" onclick="handleGenImages(${idx})">🎨 Gerar Imagens</button>
+        <span id="gen-img-status-${idx}" style="font-size:11px;color:var(--t3)"></span>
+      </div>
+      <div id="img-gallery-${idx}"></div>
     </div>`;
   }).join('');
 }
@@ -881,6 +905,614 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── CANVAS IMAGE GENERATOR ──
+// ══════════════════════════════════════════════════════════════
+
+const PARK_THEMES = {
+  mk:       { bg1: '#1a1a6b', bg2: '#4a0e8f', accent: '#f0c040', emoji: '🏰' },
+  epcot:    { bg1: '#0a2463', bg2: '#1e6091', accent: '#6ec1e4', emoji: '🌍' },
+  hs:       { bg1: '#1a0a2e', bg2: '#4a1942', accent: '#ff4444', emoji: '🎬' },
+  ak:       { bg1: '#0a3d0a', bg2: '#2d5a27', accent: '#7bc950', emoji: '🦁' },
+  uni:      { bg1: '#1a0a4e', bg2: '#2d1b69', accent: '#00b4d8', emoji: '🎥' },
+  ioa:      { bg1: '#0a0a3d', bg2: '#1a2a5e', accent: '#ffd60a', emoji: '⚡' },
+  epic:     { bg1: '#1a0533', bg2: '#3d0a66', accent: '#e040fb', emoji: '🌟' },
+  sw:       { bg1: '#0a2342', bg2: '#0d3b66', accent: '#00b4d8', emoji: '🐬' },
+  bg:       { bg1: '#2d1b00', bg2: '#5c3a00', accent: '#ff8c00', emoji: '🎢' },
+  aqua:     { bg1: '#003545', bg2: '#006d77', accent: '#83c5be', emoji: '🌊' },
+  compras:  { bg1: '#3d0a0a', bg2: '#6b1a1a', accent: '#ff6b6b', emoji: '🛍️' },
+  gastro:   { bg1: '#3d2600', bg2: '#6b4400', accent: '#ffa62b', emoji: '🍽️' },
+  passeios: { bg1: '#0a3d2d', bg2: '#1a6b4a', accent: '#2ec4b6', emoji: '🌴' },
+  default:  { bg1: '#1a1a2e', bg2: '#16213e', accent: '#e94560', emoji: '✨' },
+};
+
+function getTheme(catId) {
+  return PARK_THEMES[catId] || PARK_THEMES[(catId || '').toLowerCase()] || PARK_THEMES.default;
+}
+
+// ── Canvas helpers ──
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+      ctx.fillText(line.trim(), x, y);
+      line = words[i] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line.trim(), x, y);
+  return y;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function drawGradientBg(ctx, w, h, c1, c2) {
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, c1);
+  g.addColorStop(1, c2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawSubtlePattern(ctx, w, h, color) {
+  ctx.globalAlpha = 0.04;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (let i = -h; i < w; i += 40) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i + h, h);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1.0;
+}
+
+function drawGSLogo(ctx, x, y, size, accent) {
+  roundRect(ctx, x, y, size, size, size * 0.2);
+  const lg = ctx.createLinearGradient(x, y, x + size, y + size);
+  lg.addColorStop(0, accent);
+  lg.addColorStop(1, shadeColor(accent, -30));
+  ctx.fillStyle = lg;
+  ctx.fill();
+  ctx.font = `bold ${size * 0.45}px 'Inter', sans-serif`;
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('GS', x + size / 2, y + size / 2);
+}
+
+function shadeColor(color, percent) {
+  let R = parseInt(color.substring(1, 3), 16);
+  let G = parseInt(color.substring(3, 5), 16);
+  let B = parseInt(color.substring(5, 7), 16);
+  R = Math.min(255, Math.max(0, R + Math.round(R * percent / 100)));
+  G = Math.min(255, Math.max(0, G + Math.round(G * percent / 100)));
+  B = Math.min(255, Math.max(0, B + Math.round(B * percent / 100)));
+  return '#' + ((1 << 24) + (R << 16) + (G << 8) + B).toString(16).slice(1);
+}
+
+function drawPageDots(ctx, current, total, cx, y, dotR, activeColor) {
+  const gap = dotR * 3.5;
+  const startX = cx - ((total - 1) * gap) / 2;
+  for (let i = 0; i < total; i++) {
+    ctx.beginPath();
+    ctx.arc(startX + i * gap, y, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = i === current ? activeColor : 'rgba(255,255,255,0.25)';
+    ctx.fill();
+  }
+}
+
+// ── Generate Feed Image (1080x1080) ──
+function genFeedImage(card, post, theme) {
+  const W = 1080, H = 1080;
+  const canvas = document.getElementById('gen-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  drawGradientBg(ctx, W, H, theme.bg1, theme.bg2);
+  drawSubtlePattern(ctx, W, H, theme.accent);
+
+  // Decorative circles
+  ctx.globalAlpha = 0.06;
+  ctx.beginPath();
+  ctx.arc(W * 0.85, H * 0.15, 200, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accent;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(W * 0.1, H * 0.9, 150, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accent;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Category badge top-right
+  const catText = (card.categoria || card.catId || '').toUpperCase();
+  ctx.font = "bold 22px 'Inter', sans-serif";
+  const catW = ctx.measureText(catText).width + 32;
+  roundRect(ctx, W - catW - 50, 50, catW, 40, 20);
+  ctx.fillStyle = theme.accent;
+  ctx.globalAlpha = 0.9;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = theme.bg1;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = "bold 18px 'Inter', sans-serif";
+  ctx.fillText(catText, W - catW / 2 - 50, 70);
+
+  // Emoji
+  ctx.font = '120px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(theme.emoji, W / 2, 240);
+
+  // Title
+  ctx.textAlign = 'center';
+  ctx.font = "bold 52px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 16;
+  const titleY = wrapText(ctx, card.titulo || '', W / 2, 360, W - 160, 64);
+  ctx.shadowBlur = 0;
+
+  // Body text
+  const bodyText = (post.caption_feed || card.corpo || '').substring(0, 300);
+  ctx.font = "400 28px 'Inter', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  wrapText(ctx, bodyText, W / 2, titleY + 70, W - 200, 40);
+
+  // Bottom bar
+  const barY = H - 120;
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(0, barY, W, 120);
+
+  // GS Logo bottom-left
+  drawGSLogo(ctx, 40, barY + 25, 70, theme.accent);
+
+  // Brand text
+  ctx.textAlign = 'left';
+  ctx.font = "bold 28px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.fillText('GS Car Rental', 130, barY + 52);
+  ctx.font = "400 20px 'Inter', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('@gscarrental  •  Orlando, FL', 130, barY + 82);
+
+  return canvas.toDataURL('image/png');
+}
+
+// ── Generate Carousel Slides (1080x1080 each) ──
+function genCarouselImages(card, post, theme) {
+  const W = 1080, H = 1080;
+  const canvas = document.getElementById('gen-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const slides = post.carousel_slides || [];
+  if (!slides.length) return [];
+
+  const totalSlides = slides.length;
+  const images = [];
+
+  for (let si = 0; si < totalSlides; si++) {
+    ctx.clearRect(0, 0, W, H);
+    const slideText = slides[si];
+    const isFirst = si === 0;
+    const isLast = si === totalSlides - 1;
+
+    // Background
+    if (isFirst) {
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, theme.accent);
+      g.addColorStop(1, shadeColor(theme.accent, -40));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      drawSubtlePattern(ctx, W, H, '#fff');
+    } else if (isLast) {
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, theme.bg2);
+      g.addColorStop(1, theme.bg1);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      drawGradientBg(ctx, W, H, theme.bg1, theme.bg2);
+      drawSubtlePattern(ctx, W, H, theme.accent);
+    }
+
+    // Slide counter top-right
+    ctx.textAlign = 'right';
+    ctx.font = "600 24px 'Inter', sans-serif";
+    ctx.fillStyle = isFirst ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)';
+    ctx.fillText(`${si + 1}/${totalSlides}`, W - 50, 60);
+
+    if (isFirst) {
+      // Hook slide
+      ctx.font = '80px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(theme.emoji, W / 2, 280);
+
+      ctx.font = "bold 56px 'Inter', sans-serif";
+      ctx.fillStyle = theme.bg1;
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur = 8;
+      wrapText(ctx, slideText.replace(/^Slide\s*\d+:\s*/i, ''), W / 2, 400, W - 160, 68);
+      ctx.shadowBlur = 0;
+
+      // "Arraste" indicator
+      ctx.font = "500 26px 'Inter', sans-serif";
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.textAlign = 'center';
+      ctx.fillText('Arraste →', W / 2, H - 120);
+
+    } else if (isLast) {
+      // CTA slide
+      ctx.font = '72px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🔖', W / 2, 260);
+
+      ctx.font = "bold 48px 'Inter', sans-serif";
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 12;
+      ctx.fillText('Salva e compartilha!', W / 2, 380);
+      ctx.shadowBlur = 0;
+
+      ctx.font = "500 30px 'Inter', sans-serif";
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText(slideText.replace(/^Slide\s*\d+:\s*/i, ''), W / 2, 460);
+
+      // CTA button visual
+      const btnW = 400, btnH = 70, btnX = (W - btnW) / 2, btnY = 540;
+      roundRect(ctx, btnX, btnY, btnW, btnH, 35);
+      ctx.fillStyle = theme.accent;
+      ctx.fill();
+      ctx.font = "bold 26px 'Inter', sans-serif";
+      ctx.fillStyle = theme.bg1;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('@gscarrental', W / 2, btnY + btnH / 2);
+      ctx.textBaseline = 'alphabetic';
+
+      // GS Logo
+      drawGSLogo(ctx, W / 2 - 35, H - 200, 70, theme.accent);
+
+    } else {
+      // Content slide
+      const num = si;
+
+      // Big number
+      ctx.font = "bold 180px 'Inter', sans-serif";
+      ctx.fillStyle = theme.accent;
+      ctx.globalAlpha = 0.12;
+      ctx.textAlign = 'left';
+      ctx.fillText(String(num), 50, 220);
+      ctx.globalAlpha = 1;
+
+      // Number circle
+      ctx.beginPath();
+      ctx.arc(120, 340, 50, 0, Math.PI * 2);
+      ctx.fillStyle = theme.accent;
+      ctx.fill();
+      ctx.font = "bold 40px 'Inter', sans-serif";
+      ctx.fillStyle = theme.bg1;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(num), 120, 340);
+      ctx.textBaseline = 'alphabetic';
+
+      // Content text
+      ctx.textAlign = 'left';
+      ctx.font = "500 36px 'Inter', sans-serif";
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 8;
+      wrapText(ctx, slideText.replace(/^Slide\s*\d+:\s*/i, ''), 80, 460, W - 160, 50);
+      ctx.shadowBlur = 0;
+
+      // Accent line
+      ctx.fillStyle = theme.accent;
+      roundRect(ctx, 80, 400, 80, 4, 2);
+      ctx.fill();
+    }
+
+    // Page dots at bottom
+    drawPageDots(ctx, si, totalSlides, W / 2, H - 50, 8, isFirst ? theme.bg1 : theme.accent);
+
+    images.push(canvas.toDataURL('image/png'));
+  }
+
+  return images;
+}
+
+// ── Generate Reels Cover (1080x1920) ──
+function genReelsImage(card, post, theme) {
+  const W = 1080, H = 1920;
+  const canvas = document.getElementById('gen-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, theme.bg2);
+  g.addColorStop(0.5, theme.bg1);
+  g.addColorStop(1, shadeColor(theme.bg1, -20));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  drawSubtlePattern(ctx, W, H, theme.accent);
+
+  // Decorative glow
+  ctx.globalAlpha = 0.08;
+  ctx.beginPath();
+  ctx.arc(W / 2, H / 2, 400, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accent;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // "Reels" badge top-left
+  roundRect(ctx, 40, 60, 140, 44, 22);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fill();
+  ctx.font = "bold 22px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.fillText('▶ Reels', 110, 88);
+
+  // Category badge top-right
+  const catText = (card.categoria || '').toUpperCase();
+  ctx.font = "bold 20px 'Inter', sans-serif";
+  const catW = ctx.measureText(catText).width + 28;
+  roundRect(ctx, W - catW - 40, 60, catW, 40, 20);
+  ctx.fillStyle = theme.accent;
+  ctx.globalAlpha = 0.85;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = theme.bg1;
+  ctx.textAlign = 'center';
+  ctx.fillText(catText, W - catW / 2 - 40, 85);
+
+  // Emoji
+  ctx.font = '140px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(theme.emoji, W / 2, H * 0.32);
+
+  // Hook text (large centered)
+  const hookText = card.gancho || post.caption_reels || card.titulo || '';
+  ctx.textAlign = 'center';
+  ctx.font = "bold 64px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 20;
+  wrapText(ctx, hookText, W / 2, H * 0.48, W - 140, 80);
+  ctx.shadowBlur = 0;
+
+  // Gradient overlay at bottom
+  const og = ctx.createLinearGradient(0, H - 400, 0, H);
+  og.addColorStop(0, 'rgba(0,0,0,0)');
+  og.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = og;
+  ctx.fillRect(0, H - 400, W, 400);
+
+  // User info bottom
+  drawGSLogo(ctx, 40, H - 140, 56, theme.accent);
+  ctx.textAlign = 'left';
+  ctx.font = "bold 24px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.fillText('gscarrental', 110, H - 108);
+  ctx.font = "400 18px 'Inter', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('GS Car Rental  •  Orlando, FL', 110, H - 80);
+
+  // @gscarrental watermark center-bottom
+  ctx.textAlign = 'center';
+  ctx.font = "500 20px 'Inter', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillText('@gscarrental', W / 2, H - 30);
+
+  return canvas.toDataURL('image/png');
+}
+
+// ── Generate Stories Frame (1080x1920) ──
+function genStoriesImage(card, post, theme) {
+  const W = 1080, H = 1920;
+  const canvas = document.getElementById('gen-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, theme.bg1);
+  g.addColorStop(0.6, theme.bg2);
+  g.addColorStop(1, shadeColor(theme.bg2, -15));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  drawSubtlePattern(ctx, W, H, theme.accent);
+
+  // Story progress bar at top
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  roundRect(ctx, 20, 30, W - 40, 4, 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  roundRect(ctx, 20, 30, (W - 40) * 0.35, 4, 2);
+  ctx.fill();
+
+  // User info
+  drawGSLogo(ctx, 20, 52, 44, theme.accent);
+  ctx.textAlign = 'left';
+  ctx.font = "bold 20px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.fillText('gscarrental', 76, 80);
+
+  // Decorative glow center
+  ctx.globalAlpha = 0.06;
+  ctx.beginPath();
+  ctx.arc(W / 2, H * 0.42, 300, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accent;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Emoji
+  ctx.font = '100px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(theme.emoji, W / 2, H * 0.32);
+
+  // 3-line Stories text
+  const storyText = post.caption_stories || card.gancho || card.titulo || '';
+  ctx.textAlign = 'center';
+  ctx.font = "bold 54px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 16;
+  wrapText(ctx, storyText, W / 2, H * 0.46, W - 140, 72);
+  ctx.shadowBlur = 0;
+
+  // "Saiba mais" / swipe up indicator at bottom
+  const ctaText = post.suggested_cta || 'Saiba mais';
+  // Arrow up
+  ctx.textAlign = 'center';
+  ctx.font = '28px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('⌃', W / 2, H - 160);
+
+  // Link pill
+  roundRect(ctx, W / 2 - 160, H - 140, 320, 52, 26);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.font = "500 22px 'Inter', sans-serif";
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔗 ' + ctaText, W / 2, H - 108);
+
+  // GS branding bottom
+  ctx.font = "400 18px 'Inter', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillText('@gscarrental  •  GS Car Rental', W / 2, H - 40);
+
+  return canvas.toDataURL('image/png');
+}
+
+// ── Handle button click ──
+async function handleGenImages(idx) {
+  const item = generatedPosts[idx];
+  if (!item || !item.post) { showToast('Post nao gerado ainda.'); return; }
+
+  const btn = document.getElementById(`btn-gen-img-${idx}`);
+  const status = document.getElementById(`gen-img-status-${idx}`);
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = '⏳ Gerando...';
+  status.textContent = '';
+
+  const card = item.card;
+  const post = item.post;
+  const catId = (card.catId || '').toLowerCase();
+  const theme = getTheme(catId);
+
+  // Small delay for UI feedback
+  await new Promise(r => setTimeout(r, 100));
+
+  const allImages = []; // { dataUrl, label, filename }
+
+  try {
+    // Feed image
+    status.textContent = 'Gerando Feed...';
+    const feedImg = genFeedImage(card, post, theme);
+    allImages.push({ dataUrl: feedImg, label: 'Feed 1080x1080', filename: `gs-${catId || 'post'}-feed-1.png` });
+
+    // Carousel slides
+    status.textContent = 'Gerando Carrossel...';
+    const carouselImgs = genCarouselImages(card, post, theme);
+    carouselImgs.forEach((img, i) => {
+      allImages.push({ dataUrl: img, label: `Carrossel ${i + 1}/${carouselImgs.length}`, filename: `gs-${catId || 'post'}-carousel-${i + 1}.png` });
+    });
+
+    // Reels cover
+    status.textContent = 'Gerando Reels...';
+    const reelsImg = genReelsImage(card, post, theme);
+    allImages.push({ dataUrl: reelsImg, label: 'Reels 1080x1920', filename: `gs-${catId || 'post'}-reels-1.png` });
+
+    // Stories
+    status.textContent = 'Gerando Stories...';
+    const storiesImg = genStoriesImage(card, post, theme);
+    allImages.push({ dataUrl: storiesImg, label: 'Stories 1080x1920', filename: `gs-${catId || 'post'}-stories-1.png` });
+
+    // Render gallery
+    renderImageGallery(idx, allImages);
+    status.textContent = `${allImages.length} imagens geradas!`;
+    showToast(`${allImages.length} imagens geradas com sucesso!`);
+
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    showToast('Erro ao gerar imagens: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  btn.textContent = '🎨 Gerar Imagens';
+}
+
+function renderImageGallery(idx, images) {
+  const container = document.getElementById(`img-gallery-${idx}`);
+  if (!images.length) { container.innerHTML = ''; return; }
+
+  let html = `<div class="img-actions-bar">
+    <button class="btn-dl-all" onclick="downloadAllImages(${idx})">⬇️ Baixar Todas (${images.length})</button>
+    <span style="font-size:11px;color:var(--t3)">${images.length} imagens prontas</span>
+  </div>`;
+  html += '<div class="img-gallery">';
+  images.forEach((img, i) => {
+    html += `<div class="img-gallery-item">
+      <img src="${img.dataUrl}" alt="${img.label}" loading="lazy"/>
+      <div class="img-gallery-label">
+        <span>${img.label}</span>
+        <button class="img-dl-btn" onclick="downloadSingleImage('${img.dataUrl}','${img.filename}')">⬇️ Baixar</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Store images data on the container for "download all"
+  container._images = images;
+}
+
+function downloadSingleImage(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+async function downloadAllImages(idx) {
+  const container = document.getElementById(`img-gallery-${idx}`);
+  const images = container._images;
+  if (!images || !images.length) return;
+
+  for (let i = 0; i < images.length; i++) {
+    downloadSingleImage(images[i].dataUrl, images[i].filename);
+    // Small delay between downloads so browser doesn't block them
+    if (i < images.length - 1) await new Promise(r => setTimeout(r, 300));
+  }
+  showToast(`${images.length} imagens baixadas!`);
 }
 </script>
 </body>
