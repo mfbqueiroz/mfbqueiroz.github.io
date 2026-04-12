@@ -797,8 +797,9 @@ Exatamente 5 dicas. Busque IDs reais de vídeos via web_search.`;
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({system:sys,query:cat.q+'. Encontre IDs reais de vídeos do YouTube em português para cada dica.'})
   });
+  if(r.status===429){throw new Error('rate limit — aguardando');}
   const data=await r.json();
-  if(!data.result||!data.result.dicas)throw new Error('resposta inválida');
+  if(!data.result||!data.result.dicas)throw new Error(data.error||'resposta inválida');
   return data.result.dicas.map((d,i)=>({...d,id:`${cat.id}_${i}_${Date.now()}`,catId:cat.id}));
 }
 
@@ -818,7 +819,7 @@ async function startAgent() {
     for(let attempt=0;attempt<3&&!success;attempt++) {
       try {
         if(attempt>0) {
-          const wait=15000*attempt;
+          const wait=30000*attempt;
           addLog(`↻ retry ${attempt}/2 "${cat.label}" em ${wait/1000}s (rate limit)...`,'run');
           await new Promise(r=>setTimeout(r,wait));
         }
@@ -836,7 +837,7 @@ async function startAgent() {
         }
       }
     }
-    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,8000));
+    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,20000));
   }
   setStatus('live');
   addLog(`concluído — ${allCards.length} dicas · ${allCards.filter(c=>c.videoId).length} vídeos`,'ok');
