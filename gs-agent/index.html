@@ -350,8 +350,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--t1)
       <span id="tlog">pronto para executar</span>
     </div>
   </div>
-  <div class="top-right">
+  <div class="top-right" style="display:flex;gap:8px;">
     <button class="btn-run" id="run-btn" onclick="startAgent()">▶ Executar Agente</button>
+    <button class="btn-run" style="background:linear-gradient(135deg,#e1306c,#f77737);border:none;" onclick="openStudio()">🎨 Content Studio</button>
   </div>
 </div>
 
@@ -515,8 +516,9 @@ const CATS = [
   {id:'bg',        ico:'🎢', label:'Busch Gardens',        q:'5 melhores dicas práticas para Busch Gardens Tampa: Iron Gwazi, SheiKra, Cheetah Hunt, Montu, Serengeti Safari, dicas para brasileiros'},
   {id:'aqua',      ico:'🌊', label:'Aquatica',             q:'5 melhores dicas práticas para Aquatica Orlando parque aquático SeaWorld: melhores toboáguas, Dolphin Plunge, piscina de ondas, dicas para família'},
   // EXTRAS
-  {id:'compras',   ico:'🛍️', label:'Compras & Outlets',    q:'5 melhores dicas de compras para brasileiros em Orlando: Premium Outlets, tax free roupas Florida, apps de cupom, Ross Marshalls TJ Maxx, Disney Springs'},
-  {id:'passeios',  ico:'🌴', label:'Passeios & Atrações',  q:'5 melhores passeios e atrações fora dos parques em Orlando: Kennedy Space Center, ICON Park, airboat Everglades, Clearwater Beach, outlet tour'},
+  {id:'compras',   ico:'🛍️', label:'Compras & Outlets',    q:'8 melhores dicas de compras para brasileiros em Orlando: Premium Outlets, tax free roupas Florida, apps de cupom, Ross Marshalls TJ Maxx, Disney Springs'},
+  {id:'gastro',    ico:'🍽️', label:'Gastronomia Orlando',  q:'8 melhores restaurantes e experiências gastronômicas fora dos parques em Orlando para brasileiros: churrascarias, steakhouses, frutos do mar, brunch, sobremesas, comida brasileira, International Drive, restaurantes temáticos'},
+  {id:'passeios',  ico:'🌴', label:'Passeios & Atrações',  q:'8 melhores passeios e atrações fora dos parques em Orlando: Kennedy Space Center, ICON Park, airboat Everglades, Clearwater Beach, outlet tour, Gatorland, Fun Spot'},
 ];
 const INSTAS = {
   mk:       [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'}],
@@ -530,6 +532,7 @@ const INSTAS = {
   bg:       [{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
   aqua:     [{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'},{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'}],
   compras:  [{h:'@comprasonus',n:'Compras nos EUA',u:'https://www.instagram.com/comprasonus/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
+  gastro:   [{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'},{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'}],
   passeios: [{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
 };
 const HASHTAGS = {
@@ -544,6 +547,7 @@ const HASHTAGS = {
   bg:       '#BuschGardens #IronGwazi #Tampa #OrlandoBrasil #GSCarRental',
   aqua:     '#Aquatica #ParqueAquatico #OrlandoBrasil #GSCarRental',
   compras:  '#ComprasOrlando #OutletsOrlando #BrasileirosEUA #GSCarRental',
+  gastro:   '#GastronomiaOrlando #RestaurantesOrlando #ComidaOrlando #BrasileirosEUA #GSCarRental',
   passeios: '#OrlandoDicas #FloridaBrasil #TurismoFlorida #GSCarRental',
 };
 
@@ -709,7 +713,21 @@ function saveCard(id) {
   if(btn){btn.className='btn-sm saved';btn.textContent='✓ Salvo';}
   document.getElementById('guia-n').textContent=guiaSaved.length;
   document.getElementById('guia-list').innerHTML=guiaSaved.slice(-10).reverse().map(c=>`<div class="guia-item" title="${c.titulo}">${c.titulo}</div>`).join('');
+  // Salvar no localStorage para o Content Studio
+  try { localStorage.setItem('gs_agent_guia', JSON.stringify(guiaSaved)); } catch(e){}
   updateStats();
+}
+function openStudio() {
+  if(guiaSaved.length===0 && allCards.length>0) {
+    // Salvar todos automaticamente
+    guiaSaved=allCards.slice();
+    try { localStorage.setItem('gs_agent_guia', JSON.stringify(guiaSaved)); } catch(e){}
+  } else if(guiaSaved.length===0) {
+    alert('Nenhuma dica salva. Rode o agente primeiro e salve as dicas no Guia.');
+    return;
+  }
+  try { localStorage.setItem('gs_agent_guia', JSON.stringify(guiaSaved)); } catch(e){}
+  window.open('publish.html','_blank');
 }
 
 // ── PUBLISH ────────────────────────────────────────────────
