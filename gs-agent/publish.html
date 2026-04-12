@@ -840,10 +840,19 @@ ${esc(p.caption_feed || '')}</div>
         </div>
       </div>
 
-      <div style="padding:0 16px 12px;display:flex;align-items:center;gap:8px;">
-        <button class="btn-gen-images" id="btn-gen-img-${idx}" onclick="handleGenImages(${idx})">🎨 Gerar Imagens</button>
-        <button class="btn-gen-images" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);" onclick="speakText(${JSON.stringify((p.caption_feed||'').replace(/"/g,'\\"'))}, this)">🔊 Ouvir Narração</button>
-        <span id="gen-img-status-${idx}" style="font-size:11px;color:var(--t3)"></span>
+      <div style="padding:0 16px 12px;">
+        <div style="font-size:11px;color:var(--t2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Gerar com IA</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <button class="btn-gen-images" onclick="copyPrompt(${idx},'feed')">📸 Prompt Feed</button>
+          <button class="btn-gen-images" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);" onclick="copyPrompt(${idx},'carousel')">📑 Prompt Carrossel</button>
+          <button class="btn-gen-images" style="background:linear-gradient(135deg,#e1306c,#f77737);" onclick="copyPrompt(${idx},'reels')">🎬 Prompt Reels</button>
+          <button class="btn-gen-images" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);" onclick="speakText(${JSON.stringify((p.caption_feed||'').replace(/"/g,'\\"'))}, this)">🔊 Narração</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <button class="btn-gen-images" style="background:var(--s3);" id="btn-gen-img-${idx}" onclick="handleGenImages(${idx})">🖼 Gerar Preview Canvas</button>
+          <span id="gen-img-status-${idx}" style="font-size:11px;color:var(--t3);align-self:center;"></span>
+        </div>
+        <div id="prompt-output-${idx}" style="display:none;margin-bottom:8px;"></div>
       </div>
       <div id="img-gallery-${idx}"></div>
     </div>`;
@@ -889,6 +898,130 @@ function renderReelsScript(p, idx) {
       ` : ''}
       <button class="btn-copy-reels" onclick="copyReelsScript(${idx})">📋 Copiar Roteiro</button>
     </div>`;
+}
+
+function copyPrompt(idx, type) {
+  const item = generatedPosts[idx];
+  if (!item) return;
+  const c = item.card;
+  const p = item.post;
+  const cat = c.categoria || c.catId || '';
+  const titulo = c.titulo || '';
+  const corpo = p.caption_feed || c.corpo || '';
+  const visual = p.visual_description || '';
+  const slides = p.carousel_slides || [];
+  const hook = p.reels_script?.hook || c.gancho || titulo;
+  const scenes = p.reels_script?.scenes || [];
+
+  let prompt = '';
+
+  if (type === 'feed') {
+    prompt = `Crie uma imagem profissional para post de Instagram (1080x1080, quadrado).
+
+TEMA: ${titulo}
+CATEGORIA: ${cat}
+CONTEXTO: ${corpo.substring(0, 200)}
+
+ESTILO VISUAL:
+- Fotografia profissional de viagem/turismo em Orlando, Florida
+- Estilo influenciador de viagem brasileiro moderno
+- Cores vibrantes e quentes (dourado, laranja, azul céu)
+- Iluminação golden hour / sunset
+- Alta qualidade, resolução profissional
+- ${visual}
+
+ELEMENTOS OBRIGATÓRIOS:
+- Cenário real e realista do parque/local
+- Composição limpa para permitir texto overlay
+- Espaço na parte inferior para texto (gradiente escuro sutil)
+- Sem texto na imagem (será adicionado depois)
+- Sem logos ou marcas d'água
+
+REFERÊNCIA DE ESTILO: Posts profissionais de @danidicas.travel e @dicasdedisney no Instagram`;
+  }
+
+  else if (type === 'carousel') {
+    prompt = `Crie um SET de 7 imagens para carrossel de Instagram (1080x1080 cada).
+
+TEMA: ${titulo}
+CATEGORIA: ${cat}
+
+SLIDE 1 (CAPA):
+- Foto impressionante do local/atração principal
+- Composição dramática, cores vibrantes
+- Espaço central para título grande
+- Estilo: travel influencer premium
+
+SLIDES 2-6 (CONTEÚDO):
+${slides.slice(1, 6).map((s, i) => `- Slide ${i + 2}: ${s}`).join('\n')}
+- Para cada slide: fundo limpo e moderno (pode ser cor sólida escura #0c0f17 ou foto sutil)
+- Espaço para texto grande centralizado
+- Um elemento visual/ícone relacionado ao conteúdo
+
+SLIDE 7 (CTA):
+- Foto bonita do local com overlay escuro
+- Espaço central para "Salve e compartilhe!"
+- Espaço para @gscarrental e "Orlando, FL"
+
+ESTILO GERAL:
+- Paleta consistente em todos os slides
+- Design editorial moderno e minimalista
+- Sem poluição visual
+- Referência: carrosséis de @danidicas.travel e @coisadeorlando`;
+  }
+
+  else if (type === 'reels') {
+    prompt = `Crie um STORYBOARD visual para Reels do Instagram (1080x1920, vertical 9:16).
+
+TEMA: ${titulo}
+GANCHO (primeiros 2 segundos): "${hook}"
+
+CENAS:
+${scenes.map((s, i) => `Cena ${i + 1} (${s.time}):
+  - Visual: ${s.visual}
+  - Texto overlay: "${s.text_overlay}"
+  - Transição: ${s.transition}`).join('\n\n')}
+
+PRECISO:
+1. Uma CAPA/THUMBNAIL para o Reels (primeira impressão):
+   - Imagem vertical impactante do local
+   - Espaço para texto do gancho em letras grandes
+   - Cores vibrantes, contraste alto
+   - Badge "REELS" no canto
+
+2. FRAMES-CHAVE de cada cena (para referência de filmagem):
+   - Ângulos sugeridos de câmera
+   - Composição de cada take
+   - Elementos visuais de cada cena
+
+ESTILO: Travel Reels viral brasileiro, rápido, impactante
+REFERÊNCIA: Reels de @danidicas.travel, @viajandobaratoorlando, @coisadeorlando
+MÚSICA SUGERIDA: ${p.reels_script?.music_suggestion || 'trending audio, upbeat'}`;
+  }
+
+  // Copiar e mostrar
+  navigator.clipboard.writeText(prompt).then(() => {
+    showToast('Prompt copiado! Cole no Gemini, DALL-E, Midjourney ou Canva AI');
+  }).catch(() => {});
+
+  // Mostrar o prompt na tela
+  const output = document.getElementById('prompt-output-' + idx);
+  if (output) {
+    output.style.display = 'block';
+    output.innerHTML = `
+      <div style="background:var(--s2);border:1px solid var(--ln2);border-radius:10px;padding:12px;position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:1px;">Prompt ${type.toUpperCase()} — copiado!</span>
+          <div style="display:flex;gap:4px;">
+            <a href="https://aistudio.google.com/prompts/new_chat" target="_blank" style="font-size:10px;background:rgba(66,133,244,0.15);color:#4285f4;padding:3px 8px;border-radius:8px;text-decoration:none;font-weight:600;">Gemini →</a>
+            <a href="https://chatgpt.com/?model=gpt-4o" target="_blank" style="font-size:10px;background:rgba(16,163,127,0.15);color:#10a37f;padding:3px 8px;border-radius:8px;text-decoration:none;font-weight:600;">DALL-E →</a>
+            <a href="https://www.canva.com/ai-image-generator/" target="_blank" style="font-size:10px;background:rgba(0,196,204,0.15);color:#00c4cc;padding:3px 8px;border-radius:8px;text-decoration:none;font-weight:600;">Canva AI →</a>
+            <button onclick="this.closest('[id^=prompt-output]').style.display='none'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;">✕</button>
+          </div>
+        </div>
+        <pre style="white-space:pre-wrap;font-size:11px;color:var(--t2);line-height:1.6;max-height:300px;overflow-y:auto;font-family:inherit;">${prompt.replace(/</g,'&lt;')}</pre>
+      </div>`;
+  }
 }
 
 function copyReelsScript(idx) {
