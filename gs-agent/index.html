@@ -856,9 +856,10 @@ function showSkels() {
         <span class="sh-ico">${cat.ico}</span>
         <span class="sh-title">${cat.label}</span>
         <div class="sh-line"></div>
-        <span class="sh-meta" style="color:var(--ac)">pesquisando...</span>
+        <button data-search-cat="${cat.id}" onclick="searchCat('${cat.id}')" style="background:#1f6feb;color:#fff;border:none;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;">🔍 Pesquisar</button>
+        <span class="sh-meta">aguardando</span>
       </div>
-      ${[1,2].map(()=>`<div class="skel"><div class="sk-v"></div><div class="sk-b"><div class="sk-l" style="width:50%"></div><div class="sk-l" style="width:85%"></div><div class="sk-l" style="width:68%;height:8px"></div></div></div>`).join('')}
+      <div style="padding:12px;color:#8b949e;font-size:12px;text-align:center;">Clique em "Pesquisar" ou use "Executar" para pesquisar todas</div>
     </div>`).join('');
 }
 function replaceSkel(cat,cards) {
@@ -898,63 +899,112 @@ Para ref_hashtags, sugira 3-5 hashtags populares do Instagram para encontrar pos
   const r=await fetch('https://gs-rental-backend-gpke.vercel.app/api/research-agent',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:sys,query:cat.q})
+    body:JSON.stringify({system:sys,query:cat.q,web_search:true})
   });
-  if(r.status===429){throw new Error('rate limit — aguardando');}
+  if(r.status===429){throw new Error('rate limit — aguarde 60s e tente novamente');}
   if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error(err.error||'erro '+r.status);}
   const data=await r.json();
   if(!data.result||!data.result.dicas)throw new Error(data.error||'resposta inválida');
   return data.result.dicas.map((d,i)=>({...d,id:`${cat.id}_${i}_${Date.now()}`,catId:cat.id}));
 }
 
-// ── AGENT ────────────────────────────────────────────────
+// ── PESQUISAR UMA CATEGORIA ────────────────────────────
+async function searchCat(catId) {
+  if(running) { addLog('⏳ Aguarde a pesquisa atual terminar','err'); return; }
+  const cat = CATS.find(c => c.id === catId);
+  if(!cat) return;
+  running = true;
+  const btn = document.querySelector(`[data-search-cat="${catId}"]`);
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Pesquisando...'; }
+  setQ(cat.id, 'running');
+  addLog(`🔍 Pesquisando na web: "${cat.label}"...`, 'run');
+
+  let success = false;
+  for(let attempt = 0; attempt < 3 && !success; attempt++) {
+    try {
+      if(attempt > 0) {
+        const wait = 45000 * attempt;
+        addLog(`↻ retry ${attempt}/2 "${cat.label}" em ${wait/1000}s...`, 'run');
+        await new Promise(r => setTimeout(r, wait));
+      }
+      const cards = await fetchCat(cat);
+      // Remove cards antigos dessa categoria
+      allCards = allCards.filter(c => c.catId !== cat.id);
+      allCards.push(...cards);
+      setQ(cat.id, 'done', cards.length);
+      addLog(`✓ ${cat.label}: ${cards.length} dicas encontradas na web`, 'ok');
+      replaceSkel(cat, cards);
+      updateStats();
+      success = true;
+    } catch(e) {
+      if(attempt === 2) {
+        setQ(cat.id, 'error', 0);
+        addLog(`✗ ${cat.label}: ${e.message}`, 'err');
+      }
+    }
+  }
+  running = false;
+  if(btn) { btn.disabled = false; btn.textContent = '🔍 Pesquisar'; }
+}
+
+// ── PESQUISAR TODAS (com delay de 45s entre cada) ──────
 async function startAgent() {
-  if(running)return;
-  running=true; allCards=[]; guiaSaved=[];
-  document.getElementById('run-btn').disabled=true;
-  document.getElementById('run-btn').textContent='⏳ Rodando...';
+  if(running) return;
+  running = true;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('run-btn').textContent = '⏳ Pesquisando...';
   setStatus('run'); initQ(); showSkels(); updateStats();
-  addLog(`agente iniciado — ${CATS.length} categorias`,'run');
-  for(let ci=0;ci<CATS.length;ci++) {
-    const cat=CATS[ci];
-    setQ(cat.id,'running');
-    addLog(`pesquisando "${cat.label}"...`,'run');
-    let success=false;
-    for(let attempt=0;attempt<3&&!success;attempt++) {
+  addLog(`🔍 Iniciando pesquisa web — ${CATS.length} categorias (pode levar ${Math.round(CATS.length*50/60)} min)`, 'run');
+
+  for(let ci = 0; ci < CATS.length; ci++) {
+    const cat = CATS[ci];
+    setQ(cat.id, 'running');
+    addLog(`🔍 [${ci+1}/${CATS.length}] Pesquisando "${cat.label}" na web...`, 'run');
+
+    let success = false;
+    for(let attempt = 0; attempt < 2 && !success; attempt++) {
       try {
-        if(attempt>0) {
-          const wait=30000*attempt;
-          addLog(`↻ retry ${attempt}/2 "${cat.label}" em ${wait/1000}s (rate limit)...`,'run');
-          await new Promise(r=>setTimeout(r,wait));
+        if(attempt > 0) {
+          addLog(`↻ retry "${cat.label}" em 60s (rate limit)...`, 'run');
+          await new Promise(r => setTimeout(r, 60000));
         }
-        const cards=await fetchCat(cat);
+        const cards = await fetchCat(cat);
         allCards.push(...cards);
-        setQ(cat.id,'done',cards.length);
-        addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.youtube||c.tiktok).length} buscas`,'ok');
-        replaceSkel(cat,cards);
+        setQ(cat.id, 'done', cards.length);
+        addLog(`✓ ${cat.label}: ${cards.length} dicas reais da web`, 'ok');
+        replaceSkel(cat, cards);
         updateStats();
-        success=true;
+        success = true;
       } catch(e) {
-        if(attempt===2) {
-          setQ(cat.id,'error',0);
-          addLog(`✗ ${cat.label}: ${e.message}`,'err');
+        if(attempt === 1) {
+          setQ(cat.id, 'error', 0);
+          addLog(`✗ ${cat.label}: ${e.message}`, 'err');
         }
       }
     }
-    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,10000));
+    // 45s entre categorias para respeitar rate limit
+    if(ci < CATS.length - 1) {
+      addLog(`⏳ Aguardando 45s para próxima pesquisa...`, 'run');
+      await new Promise(r => setTimeout(r, 45000));
+    }
   }
+
   setStatus('live');
-  addLog(`concluído — ${allCards.length} dicas · ${allCards.filter(c=>c.videoId).length} vídeos`,'ok');
-  running=false;
-  document.getElementById('run-btn').disabled=false;
-  document.getElementById('run-btn').textContent='↺ Atualizar';
+  addLog(`✅ Pesquisa concluída — ${allCards.length} dicas reais coletadas da web`, 'ok');
+  running = false;
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('run-btn').textContent = '↺ Pesquisar Novamente';
+  // Salvar automaticamente
+  guiaSaved = allCards.slice();
+  try { localStorage.setItem('gs_agent_guia', JSON.stringify(guiaSaved)); } catch(e){}
 }
 
 // ── INIT ────────────────────────────────────────────────
 window.addEventListener('load',()=>{
   initQ();
   document.getElementById('sbclock').textContent=new Date().toLocaleTimeString('pt-BR');
-  setTimeout(startAgent,400);
+  // Não auto-inicia — espera o usuário clicar
+  addLog('Pronto. Clique "Executar" para pesquisar ou clique em uma categoria individual.','ok');
 });
 </script>
 </body>
