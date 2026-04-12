@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GS Content Studio — Instagram Publisher</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d1117;
+  --s1:#161b22;
+  --s2:#1c2128;
+  --s3:#21262d;
+  --s4:#30363d;
+  --ln:rgba(255,255,255,0.08);
+  --ln2:rgba(255,255,255,0.14);
+  --t1:#e6edf3;
+  --t2:#8b949e;
+  --t3:#484f58;
+  --t4:#2d333b;
+  --blue:#1f6feb;
+  --blue1:rgba(31,111,235,0.12);
+  --blue2:rgba(31,111,235,0.25);
+  --ac:#f0883e;
+  --ac1:rgba(240,136,62,0.12);
+  --ac2:rgba(240,136,62,0.25);
+  --ok:#3fb950;
+  --ok1:rgba(63,185,80,0.12);
+  --err:#f85149;
+  --purple:#a371f7;
+  --purple1:rgba(163,113,247,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;font-size:14px;line-height:1.6;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px;}
+
+/* ── HEADER ── */
+.header{background:var(--s1);border-bottom:1px solid var(--ln);padding:16px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--ac),#e8553a);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;}
+.logo-text{display:flex;flex-direction:column;}
+.logo-title{font-size:16px;font-weight:600;color:var(--t1);letter-spacing:-0.3px;}
+.logo-sub{font-size:11px;color:var(--t2);margin-top:-1px;}
+.header-spacer{flex:1;}
+.btn-back{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;border:1px solid var(--ln2);background:transparent;color:var(--t2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;text-decoration:none;}
+.btn-back:hover{color:var(--t1);border-color:var(--t2);background:var(--s2);}
+
+/* ── PROGRESS ── */
+.progress-bar{display:flex;align-items:center;justify-content:center;padding:24px 24px 0;gap:0;}
+.step-item{display:flex;align-items:center;gap:0;}
+.step-circle{width:36px;height:36px;border-radius:50%;border:2px solid var(--s4);background:var(--s1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--t3);transition:all .3s;flex-shrink:0;}
+.step-circle.active{border-color:var(--blue);background:var(--blue);color:#fff;}
+.step-circle.done{border-color:var(--ok);background:var(--ok1);color:var(--ok);}
+.step-label{font-size:11px;color:var(--t3);margin-left:8px;white-space:nowrap;transition:color .3s;}
+.step-label.active{color:var(--t1);font-weight:500;}
+.step-label.done{color:var(--ok);}
+.step-line{width:80px;height:2px;background:var(--s4);margin:0 12px;transition:background .3s;}
+.step-line.done{background:var(--ok);}
+
+/* ── CONTAINER ── */
+.container{max-width:960px;margin:0 auto;padding:24px;}
+.step-section{display:none;animation:fadeIn .3s ease;}
+.step-section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STEP 1 ── */
+.source-toggle{display:flex;gap:8px;margin-bottom:16px;}
+.src-btn{padding:8px 16px;border-radius:6px;border:1px solid var(--ln2);background:transparent;color:var(--t2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.src-btn:hover{color:var(--t1);border-color:var(--t2);}
+.src-btn.active{background:var(--blue1);border-color:var(--blue);color:var(--blue);}
+.json-input{width:100%;min-height:120px;background:var(--s2);border:1px solid var(--ln2);border-radius:8px;color:var(--t1);font-family:'Inter',monospace;font-size:12px;padding:12px;resize:vertical;margin-bottom:12px;}
+.json-input:focus{outline:none;border-color:var(--blue);}
+.btn-load{padding:8px 16px;border-radius:6px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity .2s;}
+.btn-load:hover{opacity:.88;}
+
+.select-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 14px;background:var(--s1);border:1px solid var(--ln);border-radius:8px;}
+.select-count{font-size:13px;color:var(--t2);}
+.select-count b{color:var(--ac);font-weight:600;}
+.btn-select-all{padding:6px 12px;border-radius:5px;border:1px solid var(--ln2);background:transparent;color:var(--t2);font-size:11px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-select-all:hover{color:var(--t1);border-color:var(--t2);}
+
+.card-list{display:flex;flex-direction:column;gap:8px;}
+.sel-card{background:var(--s1);border:1px solid var(--ln);border-radius:8px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:all .2s;}
+.sel-card:hover{border-color:var(--ln2);background:var(--s2);}
+.sel-card.checked{border-color:var(--blue2);background:var(--blue1);}
+.sel-cb{width:18px;height:18px;border-radius:4px;border:2px solid var(--s4);background:transparent;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:11px;color:transparent;}
+.sel-card.checked .sel-cb{border-color:var(--blue);background:var(--blue);color:#fff;}
+.sel-info{flex:1;min-width:0;}
+.sel-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px;}
+.sel-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.sel-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--s3);color:var(--t2);}
+.sel-tag.cat{background:var(--ac1);color:var(--ac);}
+.sel-tag.tipo{background:var(--purple1);color:var(--purple);}
+.sel-body{font-size:12px;color:var(--t2);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+.btn-next{display:flex;align-items:center;gap:8px;margin-top:20px;padding:12px 24px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;margin-left:auto;}
+.btn-next:hover{opacity:.9;transform:translateY(-1px);}
+.btn-next:disabled{background:var(--s3);color:var(--t3);cursor:not-allowed;transform:none;}
+
+/* ── STEP 2 ── */
+.gen-area{text-align:center;padding:40px 20px;}
+.gen-icon{font-size:48px;margin-bottom:16px;}
+.gen-title{font-size:18px;font-weight:600;margin-bottom:8px;}
+.gen-desc{font-size:13px;color:var(--t2);margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;}
+.btn-generate{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--blue),#388bfd);color:#fff;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(31,111,235,0.3);}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(31,111,235,0.4);}
+.btn-generate:disabled{background:var(--s3);color:var(--t3);box-shadow:none;cursor:not-allowed;transform:none;}
+
+.gen-progress{margin-top:24px;max-width:480px;margin-left:auto;margin-right:auto;}
+.gen-prog-bar{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;margin-bottom:8px;}
+.gen-prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--ac));border-radius:3px;transition:width .5s ease;width:0%;}
+.gen-prog-text{font-size:12px;color:var(--t2);}
+.gen-log{max-width:480px;margin:16px auto 0;text-align:left;}
+.gen-log-item{font-size:11px;color:var(--t3);padding:4px 0;border-bottom:1px solid var(--ln);font-family:monospace;display:flex;gap:8px;align-items:center;}
+.gen-log-item .ok{color:var(--ok);}
+.gen-log-item .run{color:var(--ac);}
+.gen-log-item .err{color:var(--err);}
+
+/* ── STEP 3 ── */
+.export-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.btn-export{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;border:1px solid var(--ln2);background:transparent;color:var(--t2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-export:hover{color:var(--t1);border-color:var(--t2);background:var(--s2);}
+.btn-export.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn-export.primary:hover{opacity:.88;}
+
+.post-cards{display:flex;flex-direction:column;gap:20px;}
+.post-card{background:var(--s1);border:1px solid var(--ln);border-radius:10px;overflow:hidden;}
+.post-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--ln);background:var(--s2);}
+.post-card-title{font-size:14px;font-weight:600;color:var(--t1);}
+.post-card-badge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:500;}
+.badge-reels{background:var(--purple1);color:var(--purple);}
+.badge-carousel{background:var(--ac1);color:var(--ac);}
+.badge-single{background:var(--blue1);color:var(--blue);}
+.badge-stories{background:var(--ok1);color:var(--ok);}
+
+/* Tabs */
+.post-tabs{display:flex;border-bottom:1px solid var(--ln);background:var(--s1);}
+.post-tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--t3);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;font-family:'Inter',sans-serif;transition:all .2s;}
+.post-tab:hover{color:var(--t2);}
+.post-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+.post-content{padding:16px;}
+.post-pane{display:none;animation:fadeIn .2s ease;}
+.post-pane.active{display:block;}
+
+/* Instagram Mockups */
+.ig-mockup{border:1px solid var(--ln);border-radius:12px;overflow:hidden;max-width:400px;margin:0 auto 16px;background:var(--bg);}
+
+/* Feed Mockup */
+.ig-feed-header{display:flex;align-items:center;gap:10px;padding:10px 12px;}
+.ig-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#e8553a);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.ig-username{font-size:13px;font-weight:600;color:var(--t1);}
+.ig-feed-image{width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--s2),var(--s3),var(--s4));display:flex;align-items:center;justify-content:center;position:relative;}
+.ig-feed-image .visual-hint{font-size:11px;color:var(--t3);text-align:center;padding:20px;line-height:1.6;max-width:80%;}
+.ig-feed-actions{display:flex;gap:14px;padding:10px 12px;font-size:20px;}
+.ig-feed-caption{padding:4px 12px 12px;font-size:12px;color:var(--t1);line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;}
+.ig-feed-caption .ig-user-tag{font-weight:600;}
+.ig-feed-hashtags{padding:0 12px 12px;font-size:11px;color:var(--blue);line-height:1.6;}
+
+/* Reels Mockup */
+.ig-reels{max-width:260px;margin:0 auto 16px;border-radius:16px;overflow:hidden;border:1px solid var(--ln);position:relative;}
+.ig-reels-frame{aspect-ratio:9/16;background:linear-gradient(180deg,var(--s2),var(--bg));display:flex;flex-direction:column;justify-content:flex-end;padding:16px;position:relative;}
+.ig-reels-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.ig-reels-caption{font-size:12px;color:var(--t1);line-height:1.5;text-shadow:0 1px 3px rgba(0,0,0,0.5);margin-bottom:8px;}
+.ig-reels-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.ig-reels-user span{font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+.ig-reels-sound{font-size:10px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:6px;}
+
+/* Carousel Mockup */
+.ig-carousel-wrap{max-width:400px;margin:0 auto 16px;}
+.ig-carousel-slides{display:flex;gap:12px;overflow-x:auto;padding:8px 0;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.ig-carousel-slides::-webkit-scrollbar{height:4px;}
+.ig-carousel-slide{min-width:280px;aspect-ratio:1;background:var(--s2);border:1px solid var(--ln);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;scroll-snap-align:start;flex-shrink:0;position:relative;}
+.ig-carousel-num{position:absolute;top:10px;right:12px;font-size:10px;color:var(--t3);background:var(--s3);padding:2px 8px;border-radius:10px;}
+.ig-carousel-text{font-size:14px;font-weight:500;color:var(--t1);line-height:1.6;}
+.ig-carousel-slide:first-child{background:linear-gradient(135deg,var(--ac1),var(--blue1));border-color:var(--ac2);}
+.ig-carousel-slide:first-child .ig-carousel-text{font-size:18px;font-weight:700;color:var(--ac);}
+.ig-carousel-slide:last-child{background:linear-gradient(135deg,var(--blue1),var(--purple1));border-color:var(--blue2);}
+.ig-carousel-slide:last-child .ig-carousel-text{color:var(--blue);}
+.ig-carousel-dots{display:flex;justify-content:center;gap:5px;margin-top:10px;}
+.ig-carousel-dot{width:6px;height:6px;border-radius:50%;background:var(--s4);}
+.ig-carousel-dot:first-child{background:var(--blue);}
+
+/* Stories Mockup */
+.ig-stories{max-width:260px;margin:0 auto 16px;border-radius:16px;overflow:hidden;border:1px solid var(--ln);}
+.ig-stories-frame{aspect-ratio:9/16;background:linear-gradient(180deg,var(--s3),var(--bg));display:flex;flex-direction:column;position:relative;}
+.ig-stories-top{display:flex;align-items:center;gap:8px;padding:16px 12px 8px;position:relative;z-index:2;}
+.ig-stories-bar{flex:1;height:2px;background:rgba(255,255,255,0.2);border-radius:1px;}
+.ig-stories-bar-fill{width:35%;height:100%;background:#fff;border-radius:1px;}
+.ig-stories-user{display:flex;align-items:center;gap:8px;padding:0 12px 12px;}
+.ig-stories-user .ig-avatar{width:28px;height:28px;font-size:10px;}
+.ig-stories-user span{font-size:12px;font-weight:600;color:#fff;}
+.ig-stories-content{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;}
+.ig-stories-text{font-size:18px;font-weight:600;color:#fff;line-height:1.5;text-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.ig-stories-bottom{padding:12px 16px 20px;text-align:center;}
+.ig-stories-cta{display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.15);color:#fff;font-size:12px;font-weight:500;backdrop-filter:blur(4px);}
+
+/* Section blocks in post content */
+.post-section{margin-bottom:16px;}
+.post-section-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.post-section-content{background:var(--s2);border:1px solid var(--ln);border-radius:8px;padding:12px;font-size:12px;color:var(--t1);line-height:1.7;white-space:pre-wrap;position:relative;}
+.copy-btn{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:4px;border:1px solid var(--ln2);background:var(--s3);color:var(--t2);font-size:10px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;z-index:2;}
+.copy-btn:hover{color:var(--t1);border-color:var(--t2);}
+.copy-btn.copied{background:var(--ok1);border-color:var(--ok);color:var(--ok);}
+
+.visual-box{background:var(--s2);border:1px solid var(--ln);border-radius:8px;padding:12px;display:flex;align-items:flex-start;gap:10px;margin-top:12px;}
+.visual-box-icon{font-size:18px;flex-shrink:0;}
+.visual-box-text{font-size:12px;color:var(--t2);line-height:1.6;}
+.visual-box-label{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+
+.time-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:var(--purple1);color:var(--purple);font-size:12px;font-weight:500;margin-top:8px;}
+.cta-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:var(--ac1);color:var(--ac);font-size:12px;font-weight:500;margin-top:8px;margin-left:8px;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;background:var(--s1);border:1px solid var(--ok);color:var(--ok);font-size:13px;font-weight:500;transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .header{padding:12px 16px;flex-wrap:wrap;}
+  .container{padding:16px;}
+  .progress-bar{padding:16px 16px 0;flex-wrap:wrap;gap:4px;}
+  .step-line{width:30px;margin:0 6px;}
+  .step-label{font-size:10px;}
+  .ig-mockup,.ig-carousel-wrap{max-width:100%;}
+  .ig-carousel-slide{min-width:220px;}
+  .export-bar{flex-direction:column;}
+  .post-tabs{overflow-x:auto;}
+  .sel-card{padding:12px;}
+  .gen-area{padding:24px 12px;}
+}
+@media(max-width:480px){
+  .step-label{display:none;}
+  .step-line{width:20px;}
+  .ig-reels,.ig-stories{max-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">GS</div>
+    <div class="logo-text">
+      <div class="logo-title">GS Content Studio</div>
+      <div class="logo-sub">Transforme dicas em posts profissionais para Instagram</div>
+    </div>
+  </div>
+  <div class="header-spacer"></div>
+  <a href="/gs-agent/" class="btn-back">← Voltar ao Research Agent</a>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar">
+  <div class="step-item">
+    <div class="step-circle active" id="sc-1">1</div>
+    <div class="step-label active" id="sl-1">Selecionar</div>
+  </div>
+  <div class="step-line" id="line-1"></div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-2">2</div>
+    <div class="step-label" id="sl-2">Gerar Posts</div>
+  </div>
+  <div class="step-line" id="line-2"></div>
+  <div class="step-item">
+    <div class="step-circle" id="sc-3">3</div>
+    <div class="step-label" id="sl-3">Revisar & Exportar</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- STEP 1 -->
+  <div class="step-section active" id="step-1">
+    <div class="source-toggle">
+      <button class="src-btn active" onclick="setSource('local')">📦 localStorage</button>
+      <button class="src-btn" onclick="setSource('json')">📋 Colar JSON</button>
+      <button class="src-btn" onclick="setSource('demo')">🎯 Demo</button>
+    </div>
+
+    <div id="src-json" style="display:none">
+      <textarea class="json-input" id="json-input" placeholder='Cole o JSON das dicas aqui... Formato: [{"titulo":"...","categoria":"...","corpo":"...","tipo":"reels","prioridade":"alta","hashtags":"...","gancho":"...","cta":"..."}]'></textarea>
+      <button class="btn-load" onclick="loadFromJSON()">Carregar JSON</button>
+    </div>
+
+    <div id="card-area" style="margin-top:16px">
+      <div class="select-bar">
+        <div class="select-count">
+          <b id="sel-count">0</b> dicas selecionadas
+        </div>
+        <button class="btn-select-all" onclick="toggleSelectAll()">Selecionar todos</button>
+      </div>
+      <div class="card-list" id="card-list"></div>
+    </div>
+
+    <button class="btn-next" id="btn-to-step2" disabled onclick="goStep(2)">
+      Continuar para gerar posts →
+    </button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-section" id="step-2">
+    <div class="gen-area">
+      <div class="gen-icon">🤖</div>
+      <div class="gen-title">Gerar Posts para Instagram</div>
+      <div class="gen-desc">
+        A IA vai transformar cada dica selecionada em conteudo pronto para publicar —
+        captions para Feed, Reels, Stories e Carrossel com hashtags otimizadas.
+      </div>
+      <button class="btn-generate" id="btn-gen" onclick="generatePosts()">
+        🤖 Gerar Posts para Instagram
+      </button>
+      <div class="gen-progress" id="gen-progress" style="display:none">
+        <div class="gen-prog-bar"><div class="gen-prog-fill" id="gen-fill"></div></div>
+        <div class="gen-prog-text" id="gen-text">Preparando...</div>
+      </div>
+      <div class="gen-log" id="gen-log"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-section" id="step-3">
+    <div class="export-bar">
+      <button class="btn-export primary" onclick="copyAllPosts()">📋 Copiar Tudo</button>
+      <button class="btn-export" onclick="exportJSON()">💾 Exportar JSON</button>
+      <button class="btn-export" onclick="showToast('Em breve! Agendamento via Meta API')">📅 Agendar</button>
+      <button class="btn-export" onclick="goStep(1)">← Voltar ao inicio</button>
+    </div>
+    <div class="post-cards" id="post-cards"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let cards = [];
+let selected = new Set();
+let generatedPosts = [];
+let currentStep = 1;
+let sourceMode = 'local';
+
+// ── DEMO DATA ──
+const DEMO_CARDS = [
+  {
+    id: 'demo_1',
+    titulo: 'Rope Drop: como ser o primeiro na Seven Dwarfs Mine Train',
+    categoria: 'Magic Kingdom',
+    catId: 'mk',
+    corpo: 'Chegue ao Magic Kingdom 60 minutos antes da abertura oficial. Fique posicionado no lado direito do hub, proximo ao caminho para Fantasyland. Assim que liberarem, va direto para Seven Dwarfs Mine Train sem parar. Nos dias de Early Entry (hospedes Disney), chegue 90 minutos antes. Essa estrategia pode economizar ate 90 minutos de fila.',
+    prioridade: 'alta',
+    tipo: 'reels',
+    hashtags: '#MagicKingdom #DisneyWorld #RopeDrop #SevenDwarfs #OrlandoDicas #GSCarRental #DisneyHacks',
+    gancho: 'Quer ser o PRIMEIRO na Mine Train? Faz isso aqui!',
+    cta: 'Salva esse post e marca quem vai pra Disney! 🏰',
+    youtube: 'rope drop magic kingdom dicas 2025',
+    instagram: '#magickingdom rope drop dicas'
+  },
+  {
+    id: 'demo_2',
+    titulo: 'World Showcase: roteiro gastronomico por 11 paises',
+    categoria: 'EPCOT',
+    catId: 'epcot',
+    corpo: 'O World Showcase do EPCOT tem 11 pavilhoes com culinaria autentica de cada pais. Comece pelo Mexico com tacos no San Angel Inn, passe pelo Japao para sushi fresco no Teppan Edo, prove o croissant na Franca e termine com fish & chips na Inglaterra. Reserve pelo My Disney Experience. Dica: va no almoco, os precos sao menores que no jantar e a comida e a mesma.',
+    prioridade: 'alta',
+    tipo: 'carrossel',
+    hashtags: '#EPCOT #WorldShowcase #DisneyFood #OrlandoGastronomia #GSCarRental #DisneyDicas #FoodTour',
+    gancho: '11 paises, 11 pratos, 1 dia EPICO no EPCOT!',
+    cta: 'Qual pais voce quer provar primeiro? Comenta aqui! 🌍',
+    youtube: 'epcot world showcase food tour brasileiro',
+    instagram: '#epcot world showcase gastronomia'
+  },
+  {
+    id: 'demo_3',
+    titulo: 'Harry Potter: segredos que 90% dos visitantes nao conhecem',
+    categoria: 'Universal',
+    catId: 'uni',
+    corpo: 'Na area do Harry Potter na Universal, existem interacoes escondidas que a maioria nao descobre. Use a varinha interativa nos simbolos dourados no chao de Diagon Alley e Hogsmeade — sao mais de 20 pontos magicos. No banheiro feminino do Leaky Cauldron, a Murta-Que-Geme conversa com voce. Peca uma cerveja amanteigada quente no inverno — ninguem sabe que existe. E no Hogwarts Express, a experiencia e diferente em cada direcao!',
+    prioridade: 'alta',
+    tipo: 'reels',
+    hashtags: '#HarryPotter #UniversalStudios #WizardingWorld #DiagonAlley #Hogsmeade #GSCarRental #OrlandoSegredos',
+    gancho: '90% das pessoas NAO sabem disso no Harry Potter!',
+    cta: 'Marca aquele amigo Potterhead que precisa saber disso! ⚡',
+    youtube: 'harry potter universal segredos dicas',
+    instagram: '#harrypotter universal secrets orlando'
+  }
+];
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  loadCards();
+});
+
+function loadCards() {
+  // Try localStorage first
+  try {
+    const stored = localStorage.getItem('gs_agent_guia');
+    if (stored) {
+      cards = JSON.parse(stored);
+      if (cards.length > 0) {
+        renderCards();
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Fallback to demo
+  cards = [...DEMO_CARDS];
+  sourceMode = 'demo';
+  document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.src-btn')[2].classList.add('active');
+  renderCards();
+}
+
+function setSource(mode) {
+  sourceMode = mode;
+  document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('src-json').style.display = mode === 'json' ? 'block' : 'none';
+
+  if (mode === 'local') {
+    try {
+      const stored = localStorage.getItem('gs_agent_guia');
+      if (stored) {
+        cards = JSON.parse(stored);
+        if (cards.length > 0) { renderCards(); return; }
+      }
+    } catch(e) {}
+    showToast('Nenhuma dica salva no localStorage. Usando demo.');
+    cards = [...DEMO_CARDS];
+    renderCards();
+  } else if (mode === 'demo') {
+    cards = [...DEMO_CARDS];
+    renderCards();
+  }
+  selected.clear();
+  updateSelCount();
+}
+
+function loadFromJSON() {
+  try {
+    const raw = document.getElementById('json-input').value.trim();
+    const parsed = JSON.parse(raw);
+    const arr = Array.isArray(parsed) ? parsed : (parsed.dicas || [parsed]);
+    cards = arr.map((c, i) => ({ ...c, id: c.id || `json_${i}_${Date.now()}` }));
+    renderCards();
+    showToast(`${cards.length} dicas carregadas com sucesso!`);
+  } catch(e) {
+    showToast('JSON invalido. Verifique o formato.');
+  }
+}
+
+// ── RENDER CARDS ──
+function renderCards() {
+  const list = document.getElementById('card-list');
+  if (!cards.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3)">Nenhuma dica disponivel</div>';
+    return;
+  }
+  list.innerHTML = cards.map(c => {
+    const checked = selected.has(c.id) ? 'checked' : '';
+    const tipoIcon = {reels:'🎬',carrossel:'📸',stories:'📱',post:'📝'}[c.tipo] || '📝';
+    return `
+      <div class="sel-card ${checked}" data-id="${c.id}" onclick="toggleCard('${c.id}')">
+        <div class="sel-cb">${checked ? '✓' : ''}</div>
+        <div class="sel-info">
+          <div class="sel-title">${esc(c.titulo)}</div>
+          <div class="sel-meta">
+            <span class="sel-tag cat">${esc(c.categoria)}</span>
+            <span class="sel-tag tipo">${tipoIcon} ${esc(c.tipo || 'post')}</span>
+            ${c.prioridade === 'alta' ? '<span class="sel-tag" style="background:var(--err);background:rgba(248,81,73,0.12);color:var(--err)">🔥 Alta</span>' : ''}
+          </div>
+          ${c.corpo ? `<div class="sel-body">${esc(c.corpo)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  updateSelCount();
+}
+
+function toggleCard(id) {
+  if (selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  renderCards();
+}
+
+function toggleSelectAll() {
+  if (selected.size === cards.length) {
+    selected.clear();
+  } else {
+    cards.forEach(c => selected.add(c.id));
+  }
+  renderCards();
+}
+
+function updateSelCount() {
+  document.getElementById('sel-count').textContent = selected.size;
+  document.getElementById('btn-to-step2').disabled = selected.size === 0;
+}
+
+// ── STEPS ──
+function goStep(n) {
+  currentStep = n;
+  [1,2,3].forEach(i => {
+    document.getElementById(`step-${i}`).classList.toggle('active', i === n);
+    const sc = document.getElementById(`sc-${i}`);
+    const sl = document.getElementById(`sl-${i}`);
+    sc.classList.remove('active','done');
+    sl.classList.remove('active','done');
+    if (i < n) { sc.classList.add('done'); sc.textContent = '✓'; sl.classList.add('done'); }
+    else if (i === n) { sc.classList.add('active'); sc.textContent = i; sl.classList.add('active'); }
+    else { sc.textContent = i; }
+  });
+  document.getElementById('line-1').classList.toggle('done', n > 1);
+  document.getElementById('line-2').classList.toggle('done', n > 2);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── GENERATE POSTS ──
+async function generatePosts() {
+  const selCards = cards.filter(c => selected.has(c.id));
+  if (!selCards.length) return;
+
+  const btn = document.getElementById('btn-gen');
+  btn.disabled = true;
+  btn.textContent = '⏳ Gerando...';
+  document.getElementById('gen-progress').style.display = 'block';
+  const logEl = document.getElementById('gen-log');
+  logEl.innerHTML = '';
+  generatedPosts = [];
+
+  for (let i = 0; i < selCards.length; i++) {
+    const card = selCards[i];
+    const pct = Math.round(((i) / selCards.length) * 100);
+    document.getElementById('gen-fill').style.width = pct + '%';
+    document.getElementById('gen-text').textContent = `Gerando ${i + 1} de ${selCards.length}: ${card.titulo}`;
+    addGenLog(`🔄 Gerando: ${card.titulo}...`, 'run');
+
+    try {
+      const result = await callAPI(card);
+      generatedPosts.push({ card, post: result });
+      addGenLog(`✓ ${card.titulo}`, 'ok');
+    } catch(e) {
+      addGenLog(`✗ ${card.titulo}: ${e.message}`, 'err');
+      generatedPosts.push({ card, post: null, error: e.message });
+    }
+
+    // Delay between calls to avoid rate limits
+    if (i < selCards.length - 1) {
+      document.getElementById('gen-text').textContent = `Aguardando 10s antes da proxima...`;
+      await new Promise(r => setTimeout(r, 10000));
+    }
+  }
+
+  document.getElementById('gen-fill').style.width = '100%';
+  document.getElementById('gen-text').textContent = `Concluido! ${generatedPosts.filter(p => p.post).length} posts gerados.`;
+  addGenLog(`✅ Finalizou — ${generatedPosts.filter(p => p.post).length}/${selCards.length} posts gerados`, 'ok');
+
+  btn.disabled = false;
+  btn.textContent = '🤖 Gerar Novamente';
+
+  // Auto go to step 3 after 1.5s
+  setTimeout(() => {
+    renderPostCards();
+    goStep(3);
+  }, 1500);
+}
+
+function addGenLog(text, type) {
+  const el = document.getElementById('gen-log');
+  const ts = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  el.innerHTML += `<div class="gen-log-item"><span style="color:var(--t4)">${ts}</span><span class="${type}">${esc(text)}</span></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function callAPI(card) {
+  const systemPrompt = `Voce e o estrategista de conteudo da GS Car Rental (@gscarrental), uma locadora de carros brasileira em Orlando, FL.
+Transforme a dica fornecida em conteudo profissional para Instagram. Retorne APENAS JSON puro, sem markdown, sem code blocks:
+{
+  "caption_feed": "Caption completa para post no Feed do Instagram. Use emojis, seja envolvente, 3-5 paragrafos, inclua CTA no final, mencione @gscarrental. Fale como se estivesse conversando com brasileiros que vao visitar Orlando.",
+  "caption_reels": "Caption curta e impactante para Reels, maximo 150 caracteres + hashtags separadas",
+  "caption_stories": "Texto para overlay de Stories, maximo 3 linhas curtas e impactantes",
+  "carousel_slides": ["Slide 1: gancho forte que faz parar de rolar", "Slide 2: primeiro ponto", "Slide 3: segundo ponto", "Slide 4: terceiro ponto", "Slide 5: quarto ponto", "Slide 6: resumo/curiosidade", "Slide 7: CTA - salva e compartilha com @gscarrental"],
+  "hashtags_primary": "#hash1 #hash2 ... (15 hashtags mais relevantes)",
+  "hashtags_secondary": "#hash1 #hash2 ... (15 hashtags extras para primeiro comentario)",
+  "best_time": "Melhor horario para postar (ex: Terca 11h ou Quinta 19h)",
+  "content_type": "reels|carousel|single|stories",
+  "suggested_cta": "Texto do call to action sugerido",
+  "visual_description": "Descricao detalhada da foto/video ideal para esse post (angulo, cenario, elementos, cores, estilo)"
+}`;
+
+  const query = `Dica para transformar em post Instagram:
+Titulo: ${card.titulo}
+Categoria: ${card.categoria}
+Conteudo: ${card.corpo}
+Tipo sugerido: ${card.tipo}
+Gancho: ${card.gancho || 'criar gancho'}
+CTA original: ${card.cta || 'criar CTA'}
+Hashtags base: ${card.hashtags || ''}`;
+
+  const r = await fetch('https://gs-rental-backend-gpke.vercel.app/api/research-agent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt, query })
+  });
+
+  if (r.status === 429) throw new Error('Rate limit — tente novamente em 1 minuto');
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error || 'Erro ' + r.status);
+  }
+
+  const data = await r.json();
+  if (!data.result) throw new Error(data.error || 'Resposta invalida');
+
+  // data.result should already be the parsed object
+  const result = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+  return result;
+}
+
+// ── RENDER POST CARDS ──
+function renderPostCards() {
+  const container = document.getElementById('post-cards');
+  container.innerHTML = generatedPosts.map((item, idx) => {
+    if (!item.post) {
+      return `<div class="post-card">
+        <div class="post-card-header">
+          <div class="post-card-title">❌ ${esc(item.card.titulo)}</div>
+        </div>
+        <div class="post-content" style="color:var(--err);padding:20px">Erro: ${esc(item.error || 'falha na geracao')}</div>
+      </div>`;
+    }
+
+    const p = item.post;
+    const ct = p.content_type || item.card.tipo || 'single';
+    const badgeClass = { reels:'badge-reels', carousel:'badge-carousel', single:'badge-single', stories:'badge-stories', carrossel:'badge-carousel' }[ct] || 'badge-single';
+    const badgeLabel = { reels:'Reels', carousel:'Carrossel', single:'Post Unico', stories:'Stories', carrossel:'Carrossel' }[ct] || ct;
+
+    return `
+    <div class="post-card" id="post-${idx}">
+      <div class="post-card-header">
+        <div class="post-card-title">${esc(item.card.titulo)}</div>
+        <span class="post-card-badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      <div class="post-tabs">
+        <button class="post-tab active" onclick="switchPostTab(${idx},'feed',this)">📸 Feed</button>
+        <button class="post-tab" onclick="switchPostTab(${idx},'reels',this)">🎬 Reels</button>
+        <button class="post-tab" onclick="switchPostTab(${idx},'stories',this)">📱 Stories</button>
+        <button class="post-tab" onclick="switchPostTab(${idx},'carousel',this)">📚 Carrossel</button>
+      </div>
+      <div class="post-content">
+        <!-- Feed Pane -->
+        <div class="post-pane active" id="pane-${idx}-feed">
+          <div class="ig-mockup">
+            <div class="ig-feed-header">
+              <div class="ig-avatar">GS</div>
+              <div class="ig-username">gscarrental</div>
+            </div>
+            <div class="ig-feed-image">
+              <div class="visual-hint">📷 ${esc(p.visual_description || 'Imagem sugerida pela IA')}</div>
+            </div>
+            <div class="ig-feed-actions">❤️ 💬 📤 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🔖</div>
+            <div class="ig-feed-caption"><span class="ig-user-tag">gscarrental</span> ${esc(p.caption_feed || '')}</div>
+            <div class="ig-feed-hashtags">${esc(p.hashtags_primary || '')}</div>
+          </div>
+
+          <div class="post-section">
+            <div class="post-section-label">Caption Feed</div>
+            <div class="post-section-content" id="fc-${idx}-feed">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-feed',this)">📋 Copiar</button>
+${esc(p.caption_feed || '')}</div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Hashtags Principais (na caption)</div>
+            <div class="post-section-content" id="fc-${idx}-hash1">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-hash1',this)">📋 Copiar</button>
+${esc(p.hashtags_primary || '')}</div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Hashtags Secundarias (1o comentario)</div>
+            <div class="post-section-content" id="fc-${idx}-hash2">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-hash2',this)">📋 Copiar</button>
+${esc(p.hashtags_secondary || '')}</div>
+          </div>
+          ${renderInfoBadges(p)}
+        </div>
+
+        <!-- Reels Pane -->
+        <div class="post-pane" id="pane-${idx}-reels">
+          <div class="ig-reels">
+            <div class="ig-reels-frame">
+              <div class="ig-reels-play">▶</div>
+              <div class="ig-reels-user">
+                <div class="ig-avatar" style="width:28px;height:28px;font-size:10px;">GS</div>
+                <span>gscarrental</span>
+              </div>
+              <div class="ig-reels-caption">${esc(p.caption_reels || '')}</div>
+              <div class="ig-reels-sound">🎵 Audio original · gscarrental</div>
+            </div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Caption Reels</div>
+            <div class="post-section-content" id="fc-${idx}-reels">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-reels',this)">📋 Copiar</button>
+${esc(p.caption_reels || '')}</div>
+          </div>
+          ${renderInfoBadges(p)}
+        </div>
+
+        <!-- Stories Pane -->
+        <div class="post-pane" id="pane-${idx}-stories">
+          <div class="ig-stories">
+            <div class="ig-stories-frame">
+              <div class="ig-stories-top">
+                <div class="ig-stories-bar"><div class="ig-stories-bar-fill"></div></div>
+              </div>
+              <div class="ig-stories-user">
+                <div class="ig-avatar">GS</div>
+                <span>gscarrental</span>
+              </div>
+              <div class="ig-stories-content">
+                <div class="ig-stories-text">${esc(p.caption_stories || '')}</div>
+              </div>
+              <div class="ig-stories-bottom">
+                <div class="ig-stories-cta">🔗 ${esc(p.suggested_cta || 'Saiba mais')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Texto Stories</div>
+            <div class="post-section-content" id="fc-${idx}-stories">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-stories',this)">📋 Copiar</button>
+${esc(p.caption_stories || '')}</div>
+          </div>
+          ${renderInfoBadges(p)}
+        </div>
+
+        <!-- Carousel Pane -->
+        <div class="post-pane" id="pane-${idx}-carousel">
+          <div class="ig-carousel-wrap">
+            <div class="ig-carousel-slides">
+              ${(p.carousel_slides || []).map((s, si) => `
+                <div class="ig-carousel-slide">
+                  <div class="ig-carousel-num">${si+1}/${(p.carousel_slides||[]).length}</div>
+                  <div class="ig-carousel-text">${esc(s)}</div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="ig-carousel-dots">
+              ${(p.carousel_slides || []).map((_, si) => `<div class="ig-carousel-dot" ${si===0?'style="background:var(--blue)"':''}></div>`).join('')}
+            </div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Textos do Carrossel</div>
+            <div class="post-section-content" id="fc-${idx}-carousel">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-carousel',this)">📋 Copiar</button>
+${(p.carousel_slides || []).map((s, si) => `Slide ${si+1}: ${s}`).join('\n\n')}</div>
+          </div>
+          <div class="post-section">
+            <div class="post-section-label">Caption do Carrossel (Feed)</div>
+            <div class="post-section-content" id="fc-${idx}-carfeed">
+              <button class="copy-btn" onclick="copyText('fc-${idx}-carfeed',this)">📋 Copiar</button>
+${esc(p.caption_feed || '')}</div>
+          </div>
+          ${renderInfoBadges(p)}
+        </div>
+      </div>
+
+      <div class="visual-box" style="margin:0 16px 16px;">
+        <div class="visual-box-icon">🎨</div>
+        <div>
+          <div class="visual-box-label">Descricao Visual para o Designer</div>
+          <div class="visual-box-text">${esc(p.visual_description || 'Sem descricao visual')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderInfoBadges(p) {
+  let html = '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:0">';
+  if (p.best_time) html += `<div class="time-badge">⏰ ${esc(p.best_time)}</div>`;
+  if (p.suggested_cta) html += `<div class="cta-badge">📢 ${esc(p.suggested_cta)}</div>`;
+  html += '</div>';
+  return html;
+}
+
+function switchPostTab(idx, tab, btn) {
+  const card = document.getElementById(`post-${idx}`);
+  card.querySelectorAll('.post-tab').forEach(t => t.classList.remove('active'));
+  card.querySelectorAll('.post-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`pane-${idx}-${tab}`).classList.add('active');
+}
+
+// ── COPY ──
+function copyText(elId, btn) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  // Get text content excluding the copy button
+  const clone = el.cloneNode(true);
+  const btns = clone.querySelectorAll('.copy-btn');
+  btns.forEach(b => b.remove());
+  const text = clone.textContent.trim();
+
+  navigator.clipboard.writeText(text).then(() => {
+    if (btn) {
+      btn.classList.add('copied');
+      btn.textContent = '✓ Copiado';
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Copiar'; }, 2000);
+    }
+    showToast('Copiado para a area de transferencia!');
+  });
+}
+
+function copyAllPosts() {
+  const allText = generatedPosts.filter(p => p.post).map(item => {
+    const p = item.post;
+    return `═══════════════════════════════════════
+📌 ${item.card.titulo} (${item.card.categoria})
+═══════════════════════════════════════
+
+📸 CAPTION FEED:
+${p.caption_feed || ''}
+
+🎬 CAPTION REELS:
+${p.caption_reels || ''}
+
+📱 STORIES:
+${p.caption_stories || ''}
+
+📚 CARROSSEL:
+${(p.carousel_slides || []).map((s,i) => `  Slide ${i+1}: ${s}`).join('\n')}
+
+#️⃣ HASHTAGS PRINCIPAIS:
+${p.hashtags_primary || ''}
+
+#️⃣ HASHTAGS SECUNDARIAS:
+${p.hashtags_secondary || ''}
+
+⏰ Melhor horario: ${p.best_time || '-'}
+📢 CTA: ${p.suggested_cta || '-'}
+🎨 Visual: ${p.visual_description || '-'}
+`;
+  }).join('\n\n');
+
+  navigator.clipboard.writeText(allText).then(() => {
+    showToast(`${generatedPosts.filter(p=>p.post).length} posts copiados!`);
+  });
+}
+
+function exportJSON() {
+  const data = generatedPosts.filter(p => p.post).map(item => ({
+    original: item.card,
+    instagram: item.post
+  }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gs-instagram-posts-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON exportado com sucesso!');
+}
+
+// ── UTILS ──
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
