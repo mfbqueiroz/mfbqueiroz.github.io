@@ -798,6 +798,7 @@ ${esc(p.caption_feed || '')}</div>
 
       <div style="padding:0 16px 12px;display:flex;align-items:center;gap:8px;">
         <button class="btn-gen-images" id="btn-gen-img-${idx}" onclick="handleGenImages(${idx})">🎨 Gerar Imagens</button>
+        <button class="btn-gen-images" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);" onclick="speakText(${JSON.stringify((p.caption_feed||'').replace(/"/g,'\\"'))}, this)">🔊 Ouvir Narração</button>
         <span id="gen-img-status-${idx}" style="font-size:11px;color:var(--t3)"></span>
       </div>
       <div id="img-gallery-${idx}"></div>
@@ -1526,6 +1527,72 @@ async function downloadAllImages(idx) {
     if (i < images.length - 1) await new Promise(r => setTimeout(r, 300));
   }
   showToast(`${images.length} imagens baixadas!`);
+}
+
+// ── TTS — Narração com voz feminina (browser Web Speech API) ──
+function getBrVoice() {
+  const voices = speechSynthesis.getVoices();
+  return voices.find(v => v.lang === 'pt-BR' && v.name.toLowerCase().includes('femin')) ||
+         voices.find(v => v.lang === 'pt-BR' && (v.name.includes('Google') || v.name.includes('Microsoft'))) ||
+         voices.find(v => v.lang === 'pt-BR') ||
+         voices.find(v => v.lang.startsWith('pt')) ||
+         voices[0];
+}
+
+// Preload voices
+speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+function speakText(text, btn) {
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+  const utt = new SpeechSynthesisUtterance(text);
+  const voice = getBrVoice();
+  if (voice) utt.voice = voice;
+  utt.lang = 'pt-BR';
+  utt.rate = 0.92;
+  utt.pitch = 1.1;
+  if (btn) { btn.textContent = '⏹ Parar'; utt.onend = () => { btn.textContent = '🔊 Ouvir Narração'; }; }
+  speechSynthesis.speak(utt);
+}
+
+async function recordNarration(text, filename) {
+  showToast('Gravando narração...');
+  const utt = new SpeechSynthesisUtterance(text);
+  const voice = getBrVoice();
+  if (voice) utt.voice = voice;
+  utt.lang = 'pt-BR';
+  utt.rate = 0.92;
+  utt.pitch = 1.1;
+
+  try {
+    // Create audio context and destination
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+    const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+    return new Promise((resolve) => {
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename || 'gs-narracao.webm';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Narração salva!');
+        resolve();
+      };
+
+      recorder.start();
+      utt.onend = () => { setTimeout(() => recorder.stop(), 500); };
+      speechSynthesis.speak(utt);
+    });
+  } catch(e) {
+    // Fallback: just speak without recording
+    speechSynthesis.speak(utt);
+    showToast('Ouvindo narração (gravação não suportada neste browser)');
+  }
 }
 </script>
 </body>
