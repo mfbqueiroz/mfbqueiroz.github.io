@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GS Orlando — Research & Publish</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:    #0b0c0f;
+  --s1:    #111318;
+  --s2:    #17191f;
+  --s3:    #1d2029;
+  --s4:    #252936;
+  --ln:    rgba(255,255,255,0.07);
+  --ln2:   rgba(255,255,255,0.12);
+  --t1:    #e2e5ec;
+  --t2:    #909ab0;
+  --t3:    #505869;
+  --t4:    #2c3244;
+  --ac:    #e8751a;
+  --ac1:   rgba(232,117,26,0.10);
+  --ac2:   rgba(232,117,26,0.20);
+  --ok:    #4ade80;
+  --err:   #f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--t1);display:flex;flex-direction:column;height:100vh;font-size:13px;}
+
+/* ── TOPBAR ── */
+.top{height:44px;background:var(--s1);border-bottom:1px solid var(--ln);display:flex;align-items:center;padding:0 18px;gap:18px;flex-shrink:0;}
+.top-brand{display:flex;align-items:center;gap:9px;padding-right:18px;border-right:1px solid var(--ln);}
+.top-logo{font-size:11px;font-weight:600;letter-spacing:2px;color:var(--t2);}
+.top-logo b{color:var(--t1);}
+.top-divider{width:1px;height:18px;background:var(--ln);}
+.top-kv{display:flex;flex-direction:column;gap:0px;}
+.top-kv-k{font-size:9px;color:var(--t3);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;}
+.top-kv-v{font-size:12px;font-weight:500;color:var(--t1);font-family:'IBM Plex Mono',monospace;line-height:1.2;}
+.top-kv-v.hi{color:var(--ac);}
+.top-mid{flex:1;display:flex;align-items:center;padding:0 12px;}
+.top-log{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3);display:flex;align-items:center;gap:7px;}
+.top-pulse{width:5px;height:5px;border-radius:50%;background:var(--t4);}
+.top-pulse.live{background:var(--ok);box-shadow:0 0 6px var(--ok);animation:p 2s infinite;}
+.top-pulse.run{background:var(--ac);box-shadow:0 0 6px var(--ac);animation:p .8s infinite;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.btn-run{
+  display:flex;align-items:center;gap:6px;
+  background:var(--ac);color:#fff;
+  border:none;border-radius:4px;
+  padding:6px 13px;font-size:11px;font-weight:500;
+  font-family:'IBM Plex Sans',sans-serif;
+  letter-spacing:.3px;cursor:pointer;transition:opacity .15s;
+}
+.btn-run:hover{opacity:.88;}
+.btn-run:disabled{background:var(--s3);color:var(--t3);cursor:not-allowed;}
+
+/* ── LAYOUT ── */
+.body{display:grid;grid-template-columns:200px 1fr 300px;flex:1;overflow:hidden;}
+
+/* ── LEFT ── */
+.left{background:var(--s1);border-right:1px solid var(--ln);display:flex;flex-direction:column;overflow:hidden;}
+.pnl-hdr{padding:12px 14px 8px;font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--ln);}
+.q-list{flex:1;overflow-y:auto;padding:6px;}
+.q-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 9px;border-radius:4px;cursor:pointer;
+  border:1px solid transparent;transition:all .1s;margin-bottom:1px;
+}
+.q-row:hover{background:var(--s2);}
+.q-row.active{background:var(--ac1);border-color:var(--ac2);}
+.q-row.done{opacity:.5;}
+.q-ico{font-size:12px;width:16px;text-align:center;flex-shrink:0;}
+.q-name{font-size:11px;color:var(--t2);flex:1;}
+.q-row.active .q-name{color:var(--t1);}
+.q-dot{width:5px;height:5px;border-radius:50%;background:var(--t4);flex-shrink:0;}
+.q-dot.run{background:var(--ac);animation:p .8s infinite;}
+.q-dot.ok{background:var(--ok);}
+.q-dot.err{background:var(--err);}
+.pnl-div{height:1px;background:var(--ln);}
+.guia-area{padding:10px 6px 8px;}
+.guia-hdr{display:flex;align-items:center;justify-content:space-between;padding:0 8px 8px;font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+.guia-n{background:var(--ac);color:#fff;font-size:9px;border-radius:10px;padding:1px 6px;font-family:'IBM Plex Sans',monospace;font-weight:600;}
+.guia-item{padding:5px 8px;border-radius:3px;font-size:11px;color:var(--t3);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .1s;}
+.guia-item:hover{color:var(--t1);}
+.guia-item::before{content:'— ';color:var(--t4);}
+
+/* ── CENTER ── */
+.center{overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;}
+.filter-bar{display:flex;align-items:center;background:var(--s1);border-bottom:1px solid var(--ln);padding:0 16px;position:sticky;top:0;z-index:5;flex-shrink:0;gap:0;}
+.fb{padding:11px 12px;font-size:11px;color:var(--t3);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;font-family:'IBM Plex Sans',sans-serif;transition:all .1s;white-space:nowrap;}
+.fb:hover{color:var(--t2);}
+.fb.active{color:var(--t1);border-bottom-color:var(--ac);}
+.fb-n{display:inline-block;background:var(--s3);color:var(--t3);font-size:9px;border-radius:9px;padding:1px 5px;margin-left:4px;font-family:'IBM Plex Mono',monospace;}
+.fb.active .fb-n{background:var(--ac2);color:var(--ac);}
+
+.feed{padding:20px 18px;display:flex;flex-direction:column;gap:20px;}
+.section-hdr{display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--ln);margin-bottom:12px;}
+.sh-ico{font-size:13px;}
+.sh-title{font-size:12px;font-weight:600;color:var(--t1);letter-spacing:.2px;}
+.sh-line{flex:1;}
+.sh-meta{font-size:10px;color:var(--t3);font-family:'IBM Plex Mono',monospace;}
+
+/* Card */
+.card{background:var(--s1);border:1px solid var(--ln);border-radius:6px;overflow:hidden;transition:border-color .15s;}
+.card:hover{border-color:var(--ln2);}
+.card+.card{margin-top:8px;}
+.card.has-video{border-left:2px solid var(--ac);}
+
+/* Video */
+.card-vid{position:relative;padding-top:48%;background:#000;cursor:pointer;}
+.card-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+.vid-thumb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.vid-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35;}
+.vid-play{position:relative;z-index:2;width:38px;height:38px;border-radius:50%;background:rgba(232,117,26,.85);display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+.vid-thumb:hover .vid-play{transform:scale(1.1);}
+.vid-play svg{width:14px;height:14px;fill:#fff;margin-left:2px;}
+.vid-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px 12px 8px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:2;}
+.vid-label{font-size:9px;color:rgba(255,255,255,.4);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;margin-bottom:2px;}
+.vid-title{font-size:11px;color:rgba(255,255,255,.75);line-height:1.35;}
+
+/* Clip bar */
+.clip{display:flex;align-items:center;gap:9px;padding:6px 13px;border-bottom:1px solid var(--ln);background:var(--s2);}
+.clip-tag{font-size:9px;letter-spacing:1.5px;color:var(--t3);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;white-space:nowrap;}
+.clip-desc{font-size:11px;color:var(--t3);flex:1;line-height:1.4;}
+.clip-ts{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t2);background:var(--s3);padding:2px 6px;border-radius:3px;white-space:nowrap;}
+
+/* Body */
+.card-body{padding:13px 14px;}
+.card-tags{display:flex;gap:5px;margin-bottom:8px;}
+.tag{font-size:9px;font-weight:500;letter-spacing:.8px;padding:2px 6px;border-radius:3px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+.tg-cat{background:var(--s3);color:var(--t2);}
+.tg-alt{background:var(--ac1);color:var(--ac);}
+.tg-med{background:var(--s3);color:var(--t3);}
+.card-title{font-size:13px;font-weight:500;line-height:1.45;margin-bottom:6px;color:var(--t1);}
+.card-text{font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:11px;}
+
+/* Insta credit */
+.insta{display:flex;align-items:center;gap:9px;background:var(--s2);border:1px solid var(--ln);border-radius:4px;padding:7px 11px;margin-bottom:11px;}
+.insta-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.insta-info{flex:1;min-width:0;}
+.insta-h{font-size:11px;color:var(--t1);font-family:'IBM Plex Mono',monospace;}
+.insta-d{font-size:10px;color:var(--t3);}
+.insta-link{font-size:10px;color:var(--t2);text-decoration:none;border:1px solid var(--ln2);padding:2px 7px;border-radius:3px;transition:all .1s;white-space:nowrap;}
+.insta-link:hover{color:var(--t1);border-color:var(--ln2);}
+
+/* Card footer */
+.card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--ln);}
+.card-ts{font-size:9px;color:var(--t4);font-family:'IBM Plex Mono',monospace;}
+.foot-btns{display:flex;gap:6px;}
+.btn-sm{font-size:10px;padding:4px 9px;border-radius:3px;border:1px solid var(--ln2);background:transparent;color:var(--t2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .1s;}
+.btn-sm:hover{color:var(--t1);border-color:var(--ln2);}
+.btn-sm.saved{background:var(--ac1);border-color:var(--ac2);color:var(--ac);}
+.btn-pub{background:var(--s2);border-color:var(--ln2);color:var(--t2);}
+.btn-pub:hover{background:var(--s3);color:var(--t1);}
+
+/* Skeleton */
+.skel{background:var(--s1);border:1px solid var(--ln);border-radius:6px;overflow:hidden;margin-bottom:8px;}
+.sk-v{height:150px;background:var(--s2);background-image:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;animation:sh 1.6s infinite;}
+.sk-b{padding:13px 14px;display:flex;flex-direction:column;gap:7px;}
+.sk-l{height:9px;border-radius:3px;background-image:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;animation:sh 1.6s infinite;}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Empty */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t3);gap:10px;padding:40px;text-align:center;}
+.empty h3{font-size:13px;color:var(--t2);font-weight:400;}
+.empty p{font-size:11px;line-height:1.7;}
+
+/* ── RIGHT PANEL ── */
+.right{background:var(--s1);border-left:1px solid var(--ln);display:flex;flex-direction:column;overflow:hidden;}
+.right-tabs{display:flex;border-bottom:1px solid var(--ln);}
+.rt{flex:1;padding:10px;font-size:10px;font-weight:500;color:var(--t3);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;font-family:'IBM Plex Sans',sans-serif;letter-spacing:.3px;transition:all .1s;}
+.rt:hover{color:var(--t2);}
+.rt.active{color:var(--t1);border-bottom-color:var(--ac);}
+.right-body{flex:1;overflow-y:auto;padding:14px;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.stat{background:var(--s2);border:1px solid var(--ln);border-radius:4px;padding:9px 11px;}
+.stat-k{font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
+.stat-v{font-size:20px;font-weight:500;color:var(--t1);font-family:'IBM Plex Mono',monospace;line-height:1;}
+.stat-v.c1{color:var(--ok);}
+.stat-v.c2{color:var(--ac);}
+.stat-s{font-size:9px;color:var(--t3);margin-top:1px;}
+
+.section-mini{margin-bottom:14px;}
+.sm-label{font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:9px;}
+.bk-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.bk-ico{font-size:11px;width:14px;text-align:center;}
+.bk-name{font-size:11px;color:var(--t2);flex:1;}
+.bk-bar-w{width:60px;height:2px;background:var(--s4);border-radius:2px;}
+.bk-bar{height:2px;border-radius:2px;background:var(--ac);transition:width .5s;}
+.bk-n{font-size:10px;color:var(--t3);font-family:'IBM Plex Mono',monospace;width:14px;text-align:right;}
+
+.log-box{font-family:'IBM Plex Mono',monospace;font-size:10px;}
+.log-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--ln);}
+.log-t{color:var(--t4);white-space:nowrap;}
+.log-m{color:var(--t3);line-height:1.4;}
+.log-m.ok{color:var(--ok);}
+.log-m.run{color:var(--ac);}
+.log-m.err{color:var(--err);}
+
+.ia-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--ln);}
+.ia-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.ia-h{font-size:10px;color:var(--t2);flex:1;font-family:'IBM Plex Mono',monospace;}
+.ia-lnk{font-size:9px;color:var(--t3);text-decoration:none;border:1px solid var(--ln);padding:1px 5px;border-radius:2px;transition:color .1s;}
+.ia-lnk:hover{color:var(--t1);}
+
+/* ── PUBLISH PANEL ── */
+#pub-panel{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(3px);
+}
+#pub-panel.open{display:flex;}
+.pub-modal{
+  width:640px;max-width:95vw;
+  background:var(--s1);
+  border:1px solid var(--ln2);
+  border-radius:8px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  max-height:88vh;
+}
+.pub-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;border-bottom:1px solid var(--ln);
+  flex-shrink:0;
+}
+.pub-hdr-title{font-size:12px;font-weight:500;color:var(--t1);}
+.pub-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:18px;line-height:1;padding:2px 4px;transition:color .1s;}
+.pub-close:hover{color:var(--t1);}
+.pub-body{display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;flex:1;}
+.pub-left{padding:16px 18px;border-right:1px solid var(--ln);overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.pub-right{padding:16px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.pub-label{font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:7px;}
+
+/* Format selector */
+.fmt-row{display:flex;gap:6px;}
+.fmt-btn{
+  flex:1;padding:7px 4px;border-radius:4px;
+  border:1px solid var(--ln);background:transparent;
+  color:var(--t3);font-size:10px;font-weight:500;
+  font-family:'IBM Plex Sans',sans-serif;cursor:pointer;
+  text-align:center;transition:all .1s;
+}
+.fmt-btn:hover{border-color:var(--ln2);color:var(--t2);}
+.fmt-btn.active{border-color:var(--ac2);background:var(--ac1);color:var(--ac);}
+
+/* Caption area */
+.caption-box{
+  width:100%;min-height:120px;
+  background:var(--s2);border:1px solid var(--ln);
+  border-radius:4px;padding:10px 12px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:12px;
+  color:var(--t1);line-height:1.7;resize:vertical;outline:none;
+}
+.caption-box:focus{border-color:var(--ln2);}
+.hashtag-box{
+  width:100%;min-height:60px;
+  background:var(--s2);border:1px solid var(--ln);
+  border-radius:4px;padding:9px 12px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--t3);line-height:1.7;resize:none;outline:none;
+}
+
+/* Story preview */
+.story-preview{
+  aspect-ratio:9/16;
+  background:var(--s2);border:1px solid var(--ln);
+  border-radius:6px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;
+  min-height:200px;
+}
+.story-top{
+  padding:12px;
+  background:linear-gradient(rgba(0,0,0,.5),transparent);
+  display:flex;align-items:center;gap:6px;
+}
+.story-av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:9px;}
+.story-handle{font-size:10px;color:rgba(255,255,255,.8);font-weight:500;}
+.story-body{flex:1;display:flex;align-items:flex-end;padding:12px;}
+.story-caption-prev{
+  background:rgba(0,0,0,.6);border-radius:6px;padding:10px 11px;
+  font-size:11px;color:rgba(255,255,255,.85);line-height:1.55;
+  display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;
+}
+.story-bg{position:absolute;inset:0;background:linear-gradient(160deg,var(--s3) 0%,var(--bg) 100%);z-index:0;}
+.story-top,.story-body{position:relative;z-index:1;}
+
+/* Post preview (square) */
+.post-preview{
+  aspect-ratio:1;
+  background:var(--s2);border:1px solid var(--ln);
+  border-radius:6px;overflow:hidden;position:relative;
+}
+.post-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--s3) 0%,var(--bg) 100%);}
+.post-content{
+  position:absolute;inset:0;z-index:1;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:14px;
+  background:linear-gradient(transparent 30%,rgba(0,0,0,.65));
+}
+.post-cat{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.5);text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;}
+.post-tip-title{font-size:12px;font-weight:500;color:rgba(255,255,255,.9);line-height:1.4;margin-bottom:8px;}
+.post-insta{display:flex;align-items:center;gap:5px;font-size:9px;color:rgba(255,255,255,.5);}
+.post-logo{font-size:9px;font-weight:600;letter-spacing:1px;color:rgba(255,255,255,.35);}
+
+.pub-actions{display:flex;gap:6px;margin-top:4px;flex-shrink:0;}
+.pub-act-btn{flex:1;padding:9px;border-radius:4px;border:1px solid var(--ln2);background:transparent;color:var(--t2);font-size:11px;font-weight:500;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all .1s;text-align:center;}
+.pub-act-btn:hover{background:var(--s2);color:var(--t1);}
+.pub-act-btn.primary{background:var(--ac);border-color:var(--ac);color:#fff;}
+.pub-act-btn.primary:hover{opacity:.88;}
+.copy-hint{font-size:10px;color:var(--ok);font-family:'IBM Plex Mono',monospace;text-align:center;min-height:14px;}
+
+/* Statusbar */
+.sbar{height:24px;background:var(--s1);border-top:1px solid var(--ln);display:flex;align-items:center;padding:0 14px;gap:16px;flex-shrink:0;}
+.sb{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3);font-family:'IBM Plex Mono',monospace;}
+.sb span{color:var(--t2);}
+.sb-d{width:4px;height:4px;border-radius:50%;background:var(--t4);}
+.sb-d.ok{background:var(--ok);}
+.sb-ml{margin-left:auto;display:flex;gap:14px;}
+
+::-webkit-scrollbar{width:2px;}
+::-webkit-scrollbar-thumb{background:var(--s4);}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="top">
+  <div class="top-brand">
+    <div class="top-logo"><b>GS</b> ORLANDO</div>
+  </div>
+  <div class="top-divider"></div>
+  <div class="top-kv"><div class="top-kv-k">Dicas</div><div class="top-kv-v" id="tk-total">—</div></div>
+  <div class="top-divider"></div>
+  <div class="top-kv"><div class="top-kv-k">Vídeos</div><div class="top-kv-v c1" id="tk-videos">—</div></div>
+  <div class="top-divider"></div>
+  <div class="top-kv"><div class="top-kv-k">Guia</div><div class="top-kv-v hi" id="tk-saved">0</div></div>
+  <div class="top-mid">
+    <div class="top-log">
+      <div class="top-pulse" id="tp"></div>
+      <span id="tlog">pronto para executar</span>
+    </div>
+  </div>
+  <div class="top-right">
+    <button class="btn-run" id="run-btn" onclick="startAgent()">▶ Executar Agente</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="body">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="pnl-hdr">Pesquisa</div>
+    <div class="q-list" id="qlist"></div>
+    <div class="pnl-div"></div>
+    <div class="guia-area">
+      <div class="guia-hdr">Guia GS <span class="guia-n" id="guia-n">0</span></div>
+      <div id="guia-list"><div style="font-size:10px;color:var(--t4);padding:4px 8px;">Nenhuma dica salva</div></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="filter-bar" id="filter-bar">
+      <button class="fb active" data-cat="all" onclick="setFilter(this)">Todos <span class="fb-n" id="fc-all">0</span></button>
+      <button class="fb" data-cat="disney" onclick="setFilter(this)">🏰 Disney <span class="fb-n" id="fc-disney">0</span></button>
+      <button class="fb" data-cat="universal" onclick="setFilter(this)">🎥 Universal <span class="fb-n" id="fc-universal">0</span></button>
+      <button class="fb" data-cat="passeios" onclick="setFilter(this)">🌴 Passeios <span class="fb-n" id="fc-passeios">0</span></button>
+      <button class="fb" data-cat="compras" onclick="setFilter(this)">🛍️ Compras <span class="fb-n" id="fc-compras">0</span></button>
+      <button class="fb" data-cat="novidades" onclick="setFilter(this)">⚡ Novidades <span class="fb-n" id="fc-novidades">0</span></button>
+    </div>
+    <div class="feed" id="feed">
+      <div class="empty">
+        <h3>Agente aguardando</h3>
+        <p>Clique em "Executar Agente" para iniciar<br>a pesquisa autônoma de todas as categorias.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="right-tabs">
+      <button class="rt active" onclick="showTab('dashboard',this)">Dashboard</button>
+      <button class="rt" onclick="showTab('creditos',this)">Créditos</button>
+      <button class="rt" onclick="showTab('log',this)">Log</button>
+    </div>
+    <div class="right-body">
+
+      <!-- DASHBOARD -->
+      <div class="tab-pane active" id="tab-dashboard">
+        <div class="stats">
+          <div class="stat"><div class="stat-k">Total</div><div class="stat-v" id="sv-total">0</div><div class="stat-s">dicas</div></div>
+          <div class="stat"><div class="stat-k">Vídeos</div><div class="stat-v c1" id="sv-vids">0</div><div class="stat-s">encontrados</div></div>
+          <div class="stat"><div class="stat-k">Cortes</div><div class="stat-v c2" id="sv-clips">0</div><div class="stat-s">sugeridos</div></div>
+          <div class="stat"><div class="stat-k">Guia</div><div class="stat-v c2" id="sv-saved">0</div><div class="stat-s">salvos</div></div>
+        </div>
+        <div class="section-mini">
+          <div class="sm-label">Por categoria</div>
+          <div id="bkdown"><div style="font-size:10px;color:var(--t4);">Aguardando...</div></div>
+        </div>
+      </div>
+
+      <!-- CREDITOS -->
+      <div class="tab-pane" id="tab-creditos">
+        <div class="sm-label" style="margin-bottom:9px;">Perfis para creditar</div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@dicasdedisney</div><a class="ia-lnk" href="https://www.instagram.com/dicasdedisney/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@orlandodicas</div><a class="ia-lnk" href="https://www.instagram.com/orlandodicas/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@guiadisneyworld</div><a class="ia-lnk" href="https://www.instagram.com/guiadisneyworld/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@mamaeinorlando</div><a class="ia-lnk" href="https://www.instagram.com/mamaeinorlando/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@brasileirosnaflorida</div><a class="ia-lnk" href="https://www.instagram.com/brasileirosnaflorida/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@floridabrasil</div><a class="ia-lnk" href="https://www.instagram.com/floridabrasil/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@comprasonus</div><a class="ia-lnk" href="https://www.instagram.com/comprasonus/" target="_blank">abrir</a></div>
+        <div class="ia-row"><div class="ia-av">📸</div><div class="ia-h">@viagememfamilia</div><a class="ia-lnk" href="https://www.instagram.com/viagememfamilia/" target="_blank">abrir</a></div>
+      </div>
+
+      <!-- LOG -->
+      <div class="tab-pane" id="tab-log">
+        <div class="sm-label" style="margin-bottom:9px;">Atividade</div>
+        <div class="log-box" id="logbox"><div style="color:var(--t4);font-size:10px;">Sem registros.</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- STATUSBAR -->
+<div class="sbar">
+  <div class="sb"><div class="sb-d" id="sbd"></div><span id="sbs">offline</span></div>
+  <div class="sb">modelo: <span>claude-sonnet · web_search</span></div>
+  <div class="sb-ml">
+    <div class="sb">GS Trips <span>v8.4</span></div>
+    <div class="sb" id="sbclock"></div>
+  </div>
+</div>
+
+<!-- PUBLISH MODAL -->
+<div id="pub-panel">
+  <div class="pub-modal">
+    <div class="pub-hdr">
+      <div class="pub-hdr-title">Publicar dica</div>
+      <button class="pub-close" onclick="closePub()">×</button>
+    </div>
+    <div class="pub-body">
+      <!-- LEFT: edit -->
+      <div class="pub-left">
+        <div>
+          <div class="pub-label">Formato</div>
+          <div class="fmt-row">
+            <button class="fmt-btn active" onclick="setFmt('story',this)">Story</button>
+            <button class="fmt-btn" onclick="setFmt('post',this)">Feed</button>
+            <button class="fmt-btn" onclick="setFmt('reels',this)">Reels</button>
+          </div>
+        </div>
+        <div>
+          <div class="pub-label">Legenda</div>
+          <textarea class="caption-box" id="pub-caption" oninput="syncPreview()"></textarea>
+        </div>
+        <div>
+          <div class="pub-label">Hashtags</div>
+          <textarea class="hashtag-box" id="pub-tags" rows="3" oninput="syncPreview()"></textarea>
+        </div>
+        <div>
+          <div class="pub-label">Crédito Instagram</div>
+          <div class="insta" id="pub-insta-credit" style="margin-bottom:0;"></div>
+        </div>
+        <div class="pub-actions">
+          <button class="pub-act-btn" onclick="copyAll()">Copiar texto</button>
+          <button class="pub-act-btn primary" onclick="copyAll(true)">Copiar + fechar</button>
+        </div>
+        <div class="copy-hint" id="copy-hint"></div>
+      </div>
+      <!-- RIGHT: preview -->
+      <div class="pub-right">
+        <div>
+          <div class="pub-label">Pré-visualização</div>
+          <div id="preview-wrap"></div>
+        </div>
+        <div>
+          <div class="pub-label" style="margin-bottom:6px;">Sugestão de corte</div>
+          <div style="background:var(--s2);border:1px solid var(--ln);border-radius:4px;padding:9px 12px;">
+            <div style="font-size:9px;color:var(--t3);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;">TIMESTAMP</div>
+            <div style="font-size:13px;font-weight:500;color:var(--ac);font-family:'IBM Plex Mono',monospace;" id="pub-ts">—</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:5px;line-height:1.5;" id="pub-clip-desc">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────
+const CATS = [
+  {id:'disney',    ico:'🏰', label:'Disney Parks',    q:'melhores dicas hacks Magic Kingdom EPCOT Hollywood Studios Animal Kingdom atrações filas Lightning Lane 2025'},
+  {id:'universal', ico:'🎥', label:'Universal Orlando',q:'dicas Universal Studios Islands of Adventure Epic Universe novidades Harry Potter 2025'},
+  {id:'passeios',  ico:'🌴', label:'Passeios & Tours', q:'melhores passeios tours perto de Orlando Kennedy Space Center airboat St Augustine 2025 brasileiros'},
+  {id:'compras',   ico:'🛍️', label:'Compras',          q:'outlets lojas compras Orlando dicas para brasileiros Internacional Premium Outlets tax free 2025'},
+  {id:'novidades', ico:'⚡', label:'Novidades 2025',   q:'novidades inaugurações atrações novas parques Orlando Epic Universe abertura 2025 2026'},
+];
+const INSTAS = {
+  disney:    [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'},{h:'@mamaeinorlando',n:'Mamãe no Orlando',u:'https://www.instagram.com/mamaeinorlando/'}],
+  universal: [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@viagememfamilia',n:'Viagem em Família',u:'https://www.instagram.com/viagememfamilia/'}],
+  passeios:  [{h:'@brasileirosnaflorida',n:'Brasileiros na Florida',u:'https://www.instagram.com/brasileirosnaflorida/'},{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'}],
+  compras:   [{h:'@comprasonus',n:'Compras nos EUA',u:'https://www.instagram.com/comprasonus/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
+  novidades: [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'}],
+};
+const HASHTAGS = {
+  disney:    '#DisneyWorld #MagicKingdom #DisneyDicas #OrlandoBrasil #FerrariOrlando #BrasileirnosEUA #GSCarRental',
+  universal: '#UniversalOrlando #HarryPotter #IslandsOfAdventure #BrasileirosEUA #OrlandoDicas #GSCarRental',
+  passeios:  '#OrlandoDicas #FloridaBrasil #BrasileirosEUA #TurismoFlorida #GSCarRental #AluguelDeCarros',
+  compras:   '#ComprasOrlando #OutletsOrlando #BrasileirosEUA #ShoppingFlorida #DicasDeCompras #GSCarRental',
+  novidades: '#OrlandoNovidades #EpicUniverse #NovidadesParques #FloridaBrasil #GSCarRental #BrasileirosEUA',
+};
+
+// ── STATE ────────────────────────────────────────────────
+let allCards=[], guiaSaved=[], qState={}, logs=[], running=false, filter='all', pubCard=null, pubFmt='story';
+
+// ── CLOCK ────────────────────────────────────────────────
+setInterval(()=>{ document.getElementById('sbclock').textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+
+// ── TABS ────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rt').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── QUEUE ────────────────────────────────────────────────
+function initQ() {
+  qState={};
+  CATS.forEach(c=>qState[c.id]={status:'pending',count:0});
+  renderQ();
+}
+function renderQ() {
+  document.getElementById('qlist').innerHTML = CATS.map(c=>{
+    const s=qState[c.id]||{status:'pending'};
+    return `<div class="q-row ${s.status==='running'?'active':''} ${s.status==='done'?'done':''}" id="qi-${c.id}">
+      <span class="q-ico">${c.ico}</span>
+      <span class="q-name">${c.label}</span>
+      <div class="q-dot ${s.status==='running'?'run':s.status==='done'?'ok':s.status==='error'?'err':''}"></div>
+    </div>`;
+  }).join('');
+}
+function setQ(id,status,n) {
+  qState[id]={status,count:n??qState[id]?.count??0};
+  renderQ();
+}
+
+// ── LOG ────────────────────────────────────────────────
+function addLog(msg,type='') {
+  const t=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logs.unshift({t,msg,type});
+  if(logs.length>30) logs.pop();
+  document.getElementById('logbox').innerHTML = logs.map(l=>`<div class="log-row"><span class="log-t">${l.t}</span><span class="log-m ${l.type}">${l.msg}</span></div>`).join('');
+  document.getElementById('tlog').textContent = msg;
+}
+function setStatus(s) {
+  const dot=document.getElementById('tp'), sbd=document.getElementById('sbd'), sbs=document.getElementById('sbs');
+  if(s==='run'){dot.className='top-pulse run';sbd.className='sb-d ok';sbs.textContent='pesquisando';}
+  else{dot.className='top-pulse live';sbd.className='sb-d ok';sbs.textContent='online';}
+}
+
+// ── STATS ────────────────────────────────────────────────
+function updateStats() {
+  const tot=allCards.length, vids=allCards.filter(c=>c.videoId).length, clips=allCards.filter(c=>c.clipTimestamp).length, sv=guiaSaved.length;
+  ['total','vids','clips','saved'].forEach((k,i)=>{
+    const v=[tot,vids,clips,sv][i];
+    document.getElementById('sv-'+k).textContent=v;
+  });
+  document.getElementById('tk-total').textContent=tot;
+  document.getElementById('tk-videos').textContent=vids;
+  document.getElementById('tk-saved').textContent=sv;
+  document.getElementById('fc-all').textContent=tot;
+  CATS.forEach(c=>{const el=document.getElementById('fc-'+c.id);if(el)el.textContent=allCards.filter(x=>x.catId===c.id).length;});
+  const mx=Math.max(...CATS.map(c=>allCards.filter(x=>x.catId===c.id).length),1);
+  document.getElementById('bkdown').innerHTML=CATS.map(c=>{
+    const n=allCards.filter(x=>x.catId===c.id).length,pct=Math.round(n/mx*100);
+    return `<div class="bk-row"><span class="bk-ico">${c.ico}</span><span class="bk-name">${c.label}</span><div class="bk-bar-w"><div class="bk-bar" style="width:${pct}%"></div></div><span class="bk-n">${n}</span></div>`;
+  }).join('');
+}
+
+// ── FILTER ────────────────────────────────────────────────
+function setFilter(btn) {
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filter=btn.dataset.cat;
+  renderFeed();
+}
+
+// ── FEED ────────────────────────────────────────────────
+function renderFeed() {
+  const feed=document.getElementById('feed');
+  const visible=filter==='all'?allCards:allCards.filter(c=>c.catId===filter);
+  if(!visible.length){feed.innerHTML=`<div class="empty"><h3>Sem dicas</h3></div>`;return;}
+  const groups={};
+  visible.forEach(c=>{if(!groups[c.catId])groups[c.catId]=[];groups[c.catId].push(c);});
+  feed.innerHTML=Object.entries(groups).map(([catId,cards])=>{
+    const cat=CATS.find(c=>c.id===catId);
+    return `<div>
+      <div class="section-hdr">
+        <span class="sh-ico">${cat.ico}</span>
+        <span class="sh-title">${cat.label}</span>
+        <div class="sh-line"></div>
+        <span class="sh-meta">${cards.length} dicas · ${cards.filter(c=>c.videoId).length} vídeos</span>
+      </div>
+      ${cards.map(c=>cardHTML(c)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function cardHTML(c) {
+  const ipool=INSTAS[c.catId]||INSTAS.disney;
+  const insta=ipool[c.id.charCodeAt(0)%ipool.length];
+  const ts=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const prio=c.prioridade==='alta'?'tg-alt':'tg-med';
+  const sv=guiaSaved.find(x=>x.id===c.id);
+  const thumb=c.videoId?`https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg`:null;
+  return `<div class="card ${c.videoId?'has-video':''}" id="card-${c.id}">
+    ${c.videoId?`
+    <div class="card-vid" onclick="loadVid('${c.id}','${c.videoId}')" id="vw-${c.id}">
+      <div class="vid-thumb">
+        ${thumb?`<img src="${thumb}" alt="" onerror="this.style.display='none'"/>`:'' }
+        <div class="vid-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="vid-overlay"><div class="vid-label">YouTube</div><div class="vid-title">${c.videoTitle||c.titulo}</div></div>
+      </div>
+    </div>
+    <div class="clip">
+      <span class="clip-tag">✂ corte</span>
+      <span class="clip-desc">${c.clipSugestao||'Momento ideal para recortar'}</span>
+      <span class="clip-ts">${c.clipTimestamp||'0:00'}</span>
+    </div>`:''}
+    <div class="card-body">
+      <div class="card-tags">
+        <span class="tag tg-cat">${c.categoria}</span>
+        <span class="tag ${prio}">${c.prioridade}</span>
+      </div>
+      <div class="card-title">${c.titulo}</div>
+      <div class="card-text">${c.corpo}</div>
+      <div class="insta">
+        <div class="insta-av">📸</div>
+        <div class="insta-info">
+          <div class="insta-h">${insta.h}</div>
+          <div class="insta-d">${insta.n}</div>
+        </div>
+        <a class="insta-link" href="${insta.u}" target="_blank">Creditar →</a>
+      </div>
+      <div class="card-foot">
+        <span class="card-ts">${ts}</span>
+        <div class="foot-btns">
+          <button class="btn-sm ${sv?'saved':''}" id="sb-${c.id}" onclick="saveCard('${c.id}')">
+            ${sv?'✓ Salvo':'+ Guia'}
+          </button>
+          <button class="btn-sm btn-pub" onclick='openPub(${JSON.stringify(c.id)})'>
+            ↑ Publicar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function loadVid(cid,vid) {
+  const w=document.getElementById('vw-'+cid);
+  if(!w)return;
+  w.onclick=null;
+  w.innerHTML=`<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+}
+
+function saveCard(id) {
+  const c=allCards.find(x=>x.id===id);
+  if(!c||guiaSaved.find(x=>x.id===id))return;
+  guiaSaved.push(c);
+  const btn=document.getElementById('sb-'+id);
+  if(btn){btn.className='btn-sm saved';btn.textContent='✓ Salvo';}
+  document.getElementById('guia-n').textContent=guiaSaved.length;
+  document.getElementById('guia-list').innerHTML=guiaSaved.slice(-10).reverse().map(c=>`<div class="guia-item" title="${c.titulo}">${c.titulo}</div>`).join('');
+  updateStats();
+}
+
+// ── PUBLISH ────────────────────────────────────────────────
+function openPub(cardId) {
+  pubCard=allCards.find(c=>c.id===cardId);
+  if(!pubCard)return;
+  const ipool=INSTAS[pubCard.catId]||INSTAS.disney;
+  const insta=ipool[pubCard.id.charCodeAt(0)%ipool.length];
+  // Fill caption
+  const caption=`🎯 ${pubCard.titulo}\n\n${pubCard.corpo}\n\n📍 Orlando, FL — dica GS Car Rental\n\nCrédito: ${insta.h}`;
+  document.getElementById('pub-caption').value=caption;
+  document.getElementById('pub-tags').value=HASHTAGS[pubCard.catId]||'#OrlandoDicas #GSCarRental';
+  document.getElementById('pub-ts').textContent=pubCard.clipTimestamp||'—';
+  document.getElementById('pub-clip-desc').textContent=pubCard.clipSugestao||'—';
+  document.getElementById('pub-insta-credit').innerHTML=`
+    <div class="insta-av">📸</div>
+    <div class="insta-info"><div class="insta-h">${insta.h}</div><div class="insta-d">${insta.n}</div></div>
+    <a class="insta-link" href="${insta.u}" target="_blank">Abrir perfil →</a>`;
+  pubFmt='story';
+  document.querySelectorAll('.fmt-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.getElementById('copy-hint').textContent='';
+  syncPreview();
+  document.getElementById('pub-panel').classList.add('open');
+}
+function closePub(){document.getElementById('pub-panel').classList.remove('open');}
+
+function setFmt(fmt,btn) {
+  pubFmt=fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  syncPreview();
+}
+
+function syncPreview() {
+  const cap=document.getElementById('pub-caption').value;
+  const wrap=document.getElementById('preview-wrap');
+  if(pubFmt==='story'||pubFmt==='reels') {
+    wrap.innerHTML=`
+      <div class="story-preview">
+        <div class="story-bg"></div>
+        <div class="story-top">
+          <div class="story-av">📸</div>
+          <div class="story-handle">gscarrental</div>
+        </div>
+        <div class="story-body">
+          <div class="story-caption-prev">${cap.replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  } else {
+    const title=pubCard?pubCard.titulo:'';
+    const catLabel=pubCard?pubCard.categoria:'';
+    wrap.innerHTML=`
+      <div class="post-preview">
+        <div class="post-bg"></div>
+        <div class="post-content">
+          <div class="post-cat">${catLabel}</div>
+          <div class="post-tip-title">${title}</div>
+          <div class="post-insta">
+            <span>📸 gscarrental</span>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+async function copyAll(close=false) {
+  const cap=document.getElementById('pub-caption').value;
+  const tags=document.getElementById('pub-tags').value;
+  const full=cap+'\n.\n.\n.\n'+tags;
+  try {
+    await navigator.clipboard.writeText(full);
+    document.getElementById('copy-hint').textContent='✓ Copiado!';
+    setTimeout(()=>{document.getElementById('copy-hint').textContent='';},2000);
+  } catch(e) {
+    document.getElementById('copy-hint').textContent='Selecione e copie manualmente.';
+  }
+  if(close) setTimeout(closePub,600);
+}
+
+// ── SKELETONS ────────────────────────────────────────────
+function showSkels() {
+  document.getElementById('feed').innerHTML=CATS.map(cat=>`
+    <div id="skel-${cat.id}">
+      <div class="section-hdr">
+        <span class="sh-ico">${cat.ico}</span>
+        <span class="sh-title">${cat.label}</span>
+        <div class="sh-line"></div>
+        <span class="sh-meta" style="color:var(--ac)">pesquisando...</span>
+      </div>
+      ${[1,2].map(()=>`<div class="skel"><div class="sk-v"></div><div class="sk-b"><div class="sk-l" style="width:50%"></div><div class="sk-l" style="width:85%"></div><div class="sk-l" style="width:68%;height:8px"></div></div></div>`).join('')}
+    </div>`).join('');
+}
+function replaceSkel(cat,cards) {
+  const sec=document.getElementById('skel-'+cat.id);
+  if(!sec)return;
+  sec.querySelector('.sh-meta').textContent=`${cards.length} dicas · ${cards.filter(c=>c.videoId).length} vídeos`;
+  sec.querySelectorAll('.skel').forEach(s=>s.remove());
+  sec.insertAdjacentHTML('beforeend',cards.map(c=>cardHTML(c)).join(''));
+}
+
+// ── FETCH ────────────────────────────────────────────────
+async function fetchCat(cat) {
+  const sys=`Você é o agente de pesquisa da GS Car Rental (locadora brasileira em Orlando).
+Pesquise na web e retorne APENAS JSON puro sem markdown:
+{"dicas":[{"titulo":"título max 65 chars","categoria":"${cat.label}","corpo":"2-3 frases práticas com dados de 2025","prioridade":"alta|media|baixa","videoId":"ID real do YouTube em português (null se não encontrar)","videoTitle":"título do vídeo","clipTimestamp":"ex: 2:15","clipSugestao":"o que acontece nesse momento — ideal para Reels/Stories"}]}
+Exatamente 5 dicas. Busque IDs reais de vídeos via web_search.`;
+  const r=await fetch('https://gs-rental-backend-gpke.vercel.app/api/research-agent',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system:sys,query:cat.q+'. Encontre IDs reais de vídeos do YouTube em português para cada dica.'})
+  });
+  const data=await r.json();
+  if(!data.result||!data.result.dicas)throw new Error('resposta inválida');
+  return data.result.dicas.map((d,i)=>({...d,id:`${cat.id}_${i}_${Date.now()}`,catId:cat.id}));
+}
+
+// ── AGENT ────────────────────────────────────────────────
+async function startAgent() {
+  if(running)return;
+  running=true; allCards=[]; guiaSaved=[];
+  document.getElementById('run-btn').disabled=true;
+  document.getElementById('run-btn').textContent='⏳ Rodando...';
+  setStatus('run'); initQ(); showSkels(); updateStats();
+  addLog(`agente iniciado — ${CATS.length} categorias`,'run');
+  for(const cat of CATS) {
+    setQ(cat.id,'running');
+    addLog(`pesquisando "${cat.label}"...`,'run');
+    try {
+      const cards=await fetchCat(cat);
+      allCards.push(...cards);
+      setQ(cat.id,'done',cards.length);
+      addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.videoId).length} vídeos`,'ok');
+      replaceSkel(cat,cards);
+      updateStats();
+    } catch(e) {
+      setQ(cat.id,'error',0);
+      addLog(`✗ ${cat.label}: ${e.message}`,'err');
+    }
+    await new Promise(r=>setTimeout(r,700));
+  }
+  setStatus('live');
+  addLog(`concluído — ${allCards.length} dicas · ${allCards.filter(c=>c.videoId).length} vídeos`,'ok');
+  running=false;
+  document.getElementById('run-btn').disabled=false;
+  document.getElementById('run-btn').textContent='↺ Atualizar';
+}
+
+// ── INIT ────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  initQ();
+  document.getElementById('sbclock').textContent=new Date().toLocaleTimeString('pt-BR');
+  setTimeout(startAgent,400);
+});
+</script>
+</body>
+</html>
