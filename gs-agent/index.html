@@ -810,21 +810,33 @@ async function startAgent() {
   document.getElementById('run-btn').textContent='⏳ Rodando...';
   setStatus('run'); initQ(); showSkels(); updateStats();
   addLog(`agente iniciado — ${CATS.length} categorias`,'run');
-  for(const cat of CATS) {
+  for(let ci=0;ci<CATS.length;ci++) {
+    const cat=CATS[ci];
     setQ(cat.id,'running');
     addLog(`pesquisando "${cat.label}"...`,'run');
-    try {
-      const cards=await fetchCat(cat);
-      allCards.push(...cards);
-      setQ(cat.id,'done',cards.length);
-      addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.videoId).length} vídeos`,'ok');
-      replaceSkel(cat,cards);
-      updateStats();
-    } catch(e) {
-      setQ(cat.id,'error',0);
-      addLog(`✗ ${cat.label}: ${e.message}`,'err');
+    let success=false;
+    for(let attempt=0;attempt<3&&!success;attempt++) {
+      try {
+        if(attempt>0) {
+          const wait=5000*attempt;
+          addLog(`↻ retry ${attempt}/2 "${cat.label}" em ${wait/1000}s (rate limit)...`,'run');
+          await new Promise(r=>setTimeout(r,wait));
+        }
+        const cards=await fetchCat(cat);
+        allCards.push(...cards);
+        setQ(cat.id,'done',cards.length);
+        addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.videoId).length} vídeos`,'ok');
+        replaceSkel(cat,cards);
+        updateStats();
+        success=true;
+      } catch(e) {
+        if(attempt===2) {
+          setQ(cat.id,'error',0);
+          addLog(`✗ ${cat.label}: ${e.message}`,'err');
+        }
+      }
     }
-    await new Promise(r=>setTimeout(r,700));
+    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,3000));
   }
   setStatus('live');
   addLog(`concluído — ${allCards.length} dicas · ${allCards.filter(c=>c.videoId).length} vídeos`,'ok');
