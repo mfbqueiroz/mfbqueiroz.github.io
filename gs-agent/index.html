@@ -645,40 +645,39 @@ function renderFeed() {
 }
 
 function cardHTML(c) {
-  const ipool=INSTAS[c.catId]||INSTAS.disney;
+  const ipool=INSTAS[c.catId]||INSTAS.mk;
   const insta=ipool[c.id.charCodeAt(0)%ipool.length];
   const ts=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const prio=c.prioridade==='alta'?'tg-alt':'tg-med';
   const sv=guiaSaved.find(x=>x.id===c.id);
-  const thumb=c.videoId?`https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg`:null;
-  return `<div class="card ${c.videoId?'has-video':''}" id="card-${c.id}">
-    ${c.videoId?`
-    <div class="card-vid" onclick="loadVid('${c.id}','${c.videoId}')" id="vw-${c.id}">
-      <div class="vid-thumb">
-        ${thumb?`<img src="${thumb}" alt="" onerror="this.style.display='none'"/>`:'' }
-        <div class="vid-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
-        <div class="vid-overlay"><div class="vid-label">YouTube</div><div class="vid-title">${c.videoTitle||c.titulo}</div></div>
-      </div>
-    </div>
-    <div class="clip">
-      <span class="clip-tag">✂ corte</span>
-      <span class="clip-desc">${c.clipSugestao||'Momento ideal para recortar'}</span>
-      <span class="clip-ts">${c.clipTimestamp||'0:00'}</span>
-    </div>`:''}
+  const tipoIcon={reels:'🎬',carrossel:'📸',stories:'📱',post:'📝'}[c.tipo]||'📝';
+  const ytSearch=c.youtube?`https://www.youtube.com/results?search_query=${encodeURIComponent(c.youtube)}`:'';
+  const igSearch=c.instagram?`https://www.instagram.com/explore/tags/${encodeURIComponent((c.instagram||'').replace(/[#@ ]/g,'').split(' ')[0])}/`:'';
+  const tkSearch=c.tiktok?`https://www.tiktok.com/search?q=${encodeURIComponent(c.tiktok)}`:'';
+  return `<div class="card" id="card-${c.id}">
     <div class="card-body">
       <div class="card-tags">
         <span class="tag tg-cat">${c.categoria}</span>
         <span class="tag ${prio}">${c.prioridade}</span>
+        <span class="tag" style="background:rgba(139,92,246,.15);color:#a78bfa;">${tipoIcon} ${c.tipo||'post'}</span>
       </div>
       <div class="card-title">${c.titulo}</div>
+      ${c.gancho?`<div style="background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;padding:8px 12px;margin:8px 0;border-radius:0 8px 8px 0;font-size:13px;color:#f59e0b;font-weight:600;">🎯 "${c.gancho}"</div>`:''}
       <div class="card-text">${c.corpo}</div>
+      ${c.cta?`<div style="font-size:12px;color:#8b949e;margin-top:6px;font-style:italic;">CTA: ${c.cta}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px;">
+        ${ytSearch?`<a href="${ytSearch}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,0,0,.1);color:#ff4444;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-decoration:none;border:1px solid rgba(255,0,0,.2);">▶ YouTube</a>`:''}
+        ${igSearch?`<a href="${igSearch}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:rgba(225,48,108,.1);color:#e1306c;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-decoration:none;border:1px solid rgba(225,48,108,.2);">📷 Instagram</a>`:''}
+        ${tkSearch?`<a href="${tkSearch}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,242,234,.1);color:#00f2ea;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-decoration:none;border:1px solid rgba(0,242,234,.2);">♪ TikTok</a>`:''}
+      </div>
+      ${c.hashtags?`<div style="font-size:11px;color:#58a6ff;margin:6px 0;word-break:break-all;">${c.hashtags}</div>`:''}
       <div class="insta">
         <div class="insta-av">📸</div>
         <div class="insta-info">
           <div class="insta-h">${insta.h}</div>
           <div class="insta-d">${insta.n}</div>
         </div>
-        <a class="insta-link" href="${insta.u}" target="_blank">Creditar →</a>
+        <a class="insta-link" href="${insta.u}" target="_blank">Ver perfil →</a>
       </div>
       <div class="card-foot">
         <span class="card-ts">${ts}</span>
@@ -813,10 +812,24 @@ function replaceSkel(cat,cards) {
 
 // ── FETCH ────────────────────────────────────────────────
 async function fetchCat(cat) {
-  const sys=`Você é um especialista em turismo em Orlando para brasileiros. GS Car Rental.
-Retorne APENAS JSON puro sem markdown, sem backticks:
-{"dicas":[{"titulo":"título max 65 chars","categoria":"${cat.label}","corpo":"2-3 frases práticas e úteis","prioridade":"alta|media|baixa","videoId":null,"videoTitle":"","clipTimestamp":"","clipSugestao":""}]}
-Exatamente 5 dicas práticas e atualizadas.`;
+  const sys=`Você é o estrategista de conteúdo da GS Car Rental (locadora brasileira em Orlando).
+Gere conteúdo para redes sociais sobre ${cat.label}. Retorne APENAS JSON puro, sem markdown:
+{"dicas":[
+  {
+    "titulo":"título chamativo para post (max 70 chars)",
+    "categoria":"${cat.label}",
+    "corpo":"texto completo do post (3-4 frases informativas e práticas para turistas brasileiros)",
+    "prioridade":"alta|media|baixa",
+    "tipo":"reels|carrossel|stories|post",
+    "youtube":"termo de busca exato para achar vídeo no YouTube em português (ex: 'magic kingdom dicas 2025 brasileiro')",
+    "instagram":"termo de busca exato para achar post/reel no Instagram (ex: '#magickingdom dicas brasileiro')",
+    "tiktok":"termo de busca exato para achar vídeo no TikTok (ex: 'magic kingdom hack fila')",
+    "hashtags":"5-7 hashtags relevantes",
+    "gancho":"frase de abertura impactante para Reels/TikTok (max 15 palavras)",
+    "cta":"call to action para o final do post"
+  }
+]}
+Gere 8 dicas variadas: atrações, filas, comida, economia, horários, segredos, família, fotografia.`;
   const r=await fetch('https://gs-rental-backend-gpke.vercel.app/api/research-agent',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
