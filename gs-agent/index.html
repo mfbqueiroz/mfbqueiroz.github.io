@@ -341,7 +341,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--t1)
   <div class="top-divider"></div>
   <div class="top-kv"><div class="top-kv-k">Dicas</div><div class="top-kv-v" id="tk-total">—</div></div>
   <div class="top-divider"></div>
-  <div class="top-kv"><div class="top-kv-k">Vídeos</div><div class="top-kv-v c1" id="tk-videos">—</div></div>
+  <div class="top-kv"><div class="top-kv-k">Redes</div><div class="top-kv-v c1" id="tk-videos">—</div></div>
   <div class="top-divider"></div>
   <div class="top-kv"><div class="top-kv-k">Guia</div><div class="top-kv-v hi" id="tk-saved">0</div></div>
   <div class="top-mid">
@@ -401,8 +401,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--t1)
       <div class="tab-pane active" id="tab-dashboard">
         <div class="stats">
           <div class="stat"><div class="stat-k">Total</div><div class="stat-v" id="sv-total">0</div><div class="stat-s">dicas</div></div>
-          <div class="stat"><div class="stat-k">Vídeos</div><div class="stat-v c1" id="sv-vids">0</div><div class="stat-s">encontrados</div></div>
-          <div class="stat"><div class="stat-k">Cortes</div><div class="stat-v c2" id="sv-clips">0</div><div class="stat-s">sugeridos</div></div>
+          <div class="stat"><div class="stat-k">Redes</div><div class="stat-v c1" id="sv-vids">0</div><div class="stat-s">com busca</div></div>
+          <div class="stat"><div class="stat-k">Ganchos</div><div class="stat-v c2" id="sv-clips">0</div><div class="stat-s">para Reels</div></div>
           <div class="stat"><div class="stat-k">Guia</div><div class="stat-v c2" id="sv-saved">0</div><div class="stat-s">salvos</div></div>
         </div>
         <div class="section-mini">
@@ -602,7 +602,7 @@ function setStatus(s) {
 
 // ── STATS ────────────────────────────────────────────────
 function updateStats() {
-  const tot=allCards.length, vids=allCards.filter(c=>c.videoId).length, clips=allCards.filter(c=>c.clipTimestamp).length, sv=guiaSaved.length;
+  const tot=allCards.length, vids=allCards.filter(c=>c.youtube||c.instagram||c.tiktok).length, clips=allCards.filter(c=>c.gancho).length, sv=guiaSaved.length;
   ['total','vids','clips','saved'].forEach((k,i)=>{
     const v=[tot,vids,clips,sv][i];
     document.getElementById('sv-'+k).textContent=v;
@@ -641,7 +641,7 @@ function renderFeed() {
         <span class="sh-ico">${cat.ico}</span>
         <span class="sh-title">${cat.label}</span>
         <div class="sh-line"></div>
-        <span class="sh-meta">${cards.length} dicas · ${cards.filter(c=>c.videoId).length} vídeos</span>
+        <span class="sh-meta">${cards.length} dicas · ${cards.filter(c=>c.youtube||c.tiktok).length} buscas</span>
       </div>
       ${cards.map(c=>cardHTML(c)).join('')}
     </div>`;
@@ -823,7 +823,7 @@ function showSkels() {
 function replaceSkel(cat,cards) {
   const sec=document.getElementById('skel-'+cat.id);
   if(!sec)return;
-  sec.querySelector('.sh-meta').textContent=`${cards.length} dicas · ${cards.filter(c=>c.videoId).length} vídeos`;
+  sec.querySelector('.sh-meta').textContent=`${cards.length} dicas · ${cards.filter(c=>c.youtube||c.tiktok).length} buscas`;
   sec.querySelectorAll('.skel').forEach(s=>s.remove());
   sec.insertAdjacentHTML('beforeend',cards.map(c=>cardHTML(c)).join(''));
 }
@@ -883,7 +883,7 @@ async function startAgent() {
         const cards=await fetchCat(cat);
         allCards.push(...cards);
         setQ(cat.id,'done',cards.length);
-        addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.videoId).length} vídeos`,'ok');
+        addLog(`✓ ${cat.label}: ${cards.length} dicas, ${cards.filter(c=>c.youtube||c.tiktok).length} buscas`,'ok');
         replaceSkel(cat,cards);
         updateStats();
         success=true;
