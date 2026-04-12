@@ -501,25 +501,50 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--t1)
 <script>
 // ── DATA ────────────────────────────────────────────────
 const CATS = [
-  {id:'disney',    ico:'🏰', label:'Disney Parks',    q:'melhores dicas hacks Magic Kingdom EPCOT Hollywood Studios Animal Kingdom atrações filas Lightning Lane 2025'},
-  {id:'universal', ico:'🎥', label:'Universal Orlando',q:'dicas Universal Studios Islands of Adventure Epic Universe novidades Harry Potter 2025'},
-  {id:'passeios',  ico:'🌴', label:'Passeios & Tours', q:'melhores passeios tours perto de Orlando Kennedy Space Center airboat St Augustine 2025 brasileiros'},
-  {id:'compras',   ico:'🛍️', label:'Compras',          q:'outlets lojas compras Orlando dicas para brasileiros Internacional Premium Outlets tax free 2025'},
-  {id:'novidades', ico:'⚡', label:'Novidades 2025',   q:'novidades inaugurações atrações novas parques Orlando Epic Universe abertura 2025 2026'},
+  // DISNEY (4 parques)
+  {id:'mk',        ico:'🏰', label:'Magic Kingdom',        q:'5 melhores dicas práticas para Magic Kingdom Disney World Orlando: atrações imperdíveis, ordem ideal, Lightning Lane, Rope Drop, shows noturnos'},
+  {id:'epcot',     ico:'🌍', label:'EPCOT',                q:'5 melhores dicas práticas para EPCOT Disney World Orlando: World Showcase, Guardians of the Galaxy, Test Track, Frozen, gastronomia, festival'},
+  {id:'hs',        ico:'🎬', label:'Hollywood Studios',    q:'5 melhores dicas práticas para Hollywood Studios Disney: Star Wars Galaxy Edge, Rise of the Resistance, Slinky Dog, Tower of Terror, Toy Story Land'},
+  {id:'ak',        ico:'🦁', label:'Animal Kingdom',       q:'5 melhores dicas práticas para Animal Kingdom Disney Orlando: Avatar Flight of Passage, Safari, Expedition Everest, shows, Na\'vi River Journey'},
+  // UNIVERSAL (3 parques)
+  {id:'uni',       ico:'🎥', label:'Universal Studios',    q:'5 melhores dicas práticas para Universal Studios Orlando: Harry Potter Diagon Alley, Transformers, Revenge of the Mummy, Express Pass, MEN IN BLACK'},
+  {id:'ioa',       ico:'⚡', label:'Islands of Adventure', q:'5 melhores dicas práticas para Islands of Adventure Orlando: Hagrid Motorbike, Velocicoaster, Hulk, Jurassic World, Spider-Man, Hogsmeade'},
+  {id:'epic',      ico:'🌟', label:'Epic Universe',        q:'5 melhores dicas práticas para Epic Universe Universal Orlando novo parque 2025: mundos temáticos, Super Nintendo World, How to Train Your Dragon, Dark Universe, ingressos'},
+  // SEAWORLD (3 parques)
+  {id:'sw',        ico:'🐬', label:'SeaWorld Orlando',     q:'5 melhores dicas práticas para SeaWorld Orlando: Mako, Manta, Kraken, Pipeline, Ice Breaker, shows com animais, dicas para família brasileira'},
+  {id:'bg',        ico:'🎢', label:'Busch Gardens',        q:'5 melhores dicas práticas para Busch Gardens Tampa: Iron Gwazi, SheiKra, Cheetah Hunt, Montu, Serengeti Safari, dicas para brasileiros'},
+  {id:'aqua',      ico:'🌊', label:'Aquatica',             q:'5 melhores dicas práticas para Aquatica Orlando parque aquático SeaWorld: melhores toboáguas, Dolphin Plunge, piscina de ondas, dicas para família'},
+  // EXTRAS
+  {id:'compras',   ico:'🛍️', label:'Compras & Outlets',    q:'5 melhores dicas de compras para brasileiros em Orlando: Premium Outlets, tax free roupas Florida, apps de cupom, Ross Marshalls TJ Maxx, Disney Springs'},
+  {id:'passeios',  ico:'🌴', label:'Passeios & Atrações',  q:'5 melhores passeios e atrações fora dos parques em Orlando: Kennedy Space Center, ICON Park, airboat Everglades, Clearwater Beach, outlet tour'},
 ];
 const INSTAS = {
-  disney:    [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'},{h:'@mamaeinorlando',n:'Mamãe no Orlando',u:'https://www.instagram.com/mamaeinorlando/'}],
-  universal: [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@viagememfamilia',n:'Viagem em Família',u:'https://www.instagram.com/viagememfamilia/'}],
-  passeios:  [{h:'@brasileirosnaflorida',n:'Brasileiros na Florida',u:'https://www.instagram.com/brasileirosnaflorida/'},{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'}],
-  compras:   [{h:'@comprasonus',n:'Compras nos EUA',u:'https://www.instagram.com/comprasonus/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
-  novidades: [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'}],
+  mk:       [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'}],
+  epcot:    [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@mamaeinorlando',n:'Mamãe no Orlando',u:'https://www.instagram.com/mamaeinorlando/'}],
+  hs:       [{h:'@guiadisneyworld',n:'Guia Disney World',u:'https://www.instagram.com/guiadisneyworld/'},{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'}],
+  ak:       [{h:'@dicasdedisney',n:'Dicas de Disney',u:'https://www.instagram.com/dicasdedisney/'},{h:'@viagememfamilia',n:'Viagem em Família',u:'https://www.instagram.com/viagememfamilia/'}],
+  uni:      [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@viagememfamilia',n:'Viagem em Família',u:'https://www.instagram.com/viagememfamilia/'}],
+  ioa:      [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
+  epic:     [{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'},{h:'@viagememfamilia',n:'Viagem em Família',u:'https://www.instagram.com/viagememfamilia/'}],
+  sw:       [{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'},{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'}],
+  bg:       [{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
+  aqua:     [{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'},{h:'@orlandodicas',n:'Orlando Dicas',u:'https://www.instagram.com/orlandodicas/'}],
+  compras:  [{h:'@comprasonus',n:'Compras nos EUA',u:'https://www.instagram.com/comprasonus/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
+  passeios: [{h:'@floridabrasil',n:'Florida Brasil',u:'https://www.instagram.com/floridabrasil/'},{h:'@brasileirosnaflorida',n:'Brasileiros na FL',u:'https://www.instagram.com/brasileirosnaflorida/'}],
 };
 const HASHTAGS = {
-  disney:    '#DisneyWorld #MagicKingdom #DisneyDicas #OrlandoBrasil #FerrariOrlando #BrasileirnosEUA #GSCarRental',
-  universal: '#UniversalOrlando #HarryPotter #IslandsOfAdventure #BrasileirosEUA #OrlandoDicas #GSCarRental',
-  passeios:  '#OrlandoDicas #FloridaBrasil #BrasileirosEUA #TurismoFlorida #GSCarRental #AluguelDeCarros',
-  compras:   '#ComprasOrlando #OutletsOrlando #BrasileirosEUA #ShoppingFlorida #DicasDeCompras #GSCarRental',
-  novidades: '#OrlandoNovidades #EpicUniverse #NovidadesParques #FloridaBrasil #GSCarRental #BrasileirosEUA',
+  mk:       '#MagicKingdom #DisneyWorld #DisneyDicas #OrlandoBrasil #GSCarRental',
+  epcot:    '#EPCOT #DisneyWorld #WorldShowcase #OrlandoBrasil #GSCarRental',
+  hs:       '#HollywoodStudios #StarWars #DisneyWorld #OrlandoBrasil #GSCarRental',
+  ak:       '#AnimalKingdom #Avatar #DisneyWorld #OrlandoBrasil #GSCarRental',
+  uni:      '#UniversalStudios #HarryPotter #OrlandoBrasil #GSCarRental',
+  ioa:      '#IslandsOfAdventure #Velocicoaster #HarryPotter #OrlandoBrasil #GSCarRental',
+  epic:     '#EpicUniverse #UniversalOrlando #NintendoWorld #OrlandoBrasil #GSCarRental',
+  sw:       '#SeaWorld #SeaWorldOrlando #OrlandoBrasil #GSCarRental',
+  bg:       '#BuschGardens #IronGwazi #Tampa #OrlandoBrasil #GSCarRental',
+  aqua:     '#Aquatica #ParqueAquatico #OrlandoBrasil #GSCarRental',
+  compras:  '#ComprasOrlando #OutletsOrlando #BrasileirosEUA #GSCarRental',
+  passeios: '#OrlandoDicas #FloridaBrasil #TurismoFlorida #GSCarRental',
 };
 
 // ── STATE ────────────────────────────────────────────────
@@ -788,16 +813,17 @@ function replaceSkel(cat,cards) {
 
 // ── FETCH ────────────────────────────────────────────────
 async function fetchCat(cat) {
-  const sys=`Você é o agente de pesquisa da GS Car Rental (locadora brasileira em Orlando).
-Pesquise na web e retorne APENAS JSON puro sem markdown:
-{"dicas":[{"titulo":"título max 65 chars","categoria":"${cat.label}","corpo":"2-3 frases práticas com dados de 2025","prioridade":"alta|media|baixa","videoId":"ID real do YouTube em português (null se não encontrar)","videoTitle":"título do vídeo","clipTimestamp":"ex: 2:15","clipSugestao":"o que acontece nesse momento — ideal para Reels/Stories"}]}
-Exatamente 5 dicas. Busque IDs reais de vídeos via web_search.`;
+  const sys=`Você é um especialista em turismo em Orlando para brasileiros. GS Car Rental.
+Retorne APENAS JSON puro sem markdown, sem backticks:
+{"dicas":[{"titulo":"título max 65 chars","categoria":"${cat.label}","corpo":"2-3 frases práticas e úteis","prioridade":"alta|media|baixa","videoId":null,"videoTitle":"","clipTimestamp":"","clipSugestao":""}]}
+Exatamente 5 dicas práticas e atualizadas.`;
   const r=await fetch('https://gs-rental-backend-gpke.vercel.app/api/research-agent',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:sys,query:cat.q+'. Encontre IDs reais de vídeos do YouTube em português para cada dica.'})
+    body:JSON.stringify({system:sys,query:cat.q})
   });
   if(r.status===429){throw new Error('rate limit — aguardando');}
+  if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error(err.error||'erro '+r.status);}
   const data=await r.json();
   if(!data.result||!data.result.dicas)throw new Error(data.error||'resposta inválida');
   return data.result.dicas.map((d,i)=>({...d,id:`${cat.id}_${i}_${Date.now()}`,catId:cat.id}));
@@ -837,7 +863,7 @@ async function startAgent() {
         }
       }
     }
-    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,20000));
+    if(ci<CATS.length-1) await new Promise(r=>setTimeout(r,10000));
   }
   setStatus('live');
   addLog(`concluído — ${allCards.length} dicas · ${allCards.filter(c=>c.videoId).length} vídeos`,'ok');
